@@ -1,1 +1,1 @@
-# Digitalizaci-n-Partituras-
+# Digitalizacion-Partituras
