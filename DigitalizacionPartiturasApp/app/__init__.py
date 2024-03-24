@@ -6,4 +6,4 @@ app.config['SECRET_KEY'] = 'partituras2024ubu'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///tu_base_de_datos.db'
 db = SQLAlchemy(app)
 
-from app import routes
+from . import routes
