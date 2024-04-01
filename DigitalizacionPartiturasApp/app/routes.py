@@ -1,5 +1,6 @@
 from app import app
-from flask import render_template, request, redirect, url_for
+from flask import render_template
+from app.forms import LoginForm, RegistrationForm
 
 @app.route('/')
 def home():
@@ -8,11 +9,16 @@ def home():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        if username == "admin" and password == "secret":  
+        user = User.query.filter_by(username=request.form['username']).first()
+        if user and user.check_password(request.form['password']):
             return redirect(url_for('home'))
         else:
             return 'Usuario o contraseña inválida'
     return render_template('login.html')
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    form = RegistrationForm()
+    # Lógica para validar el formulario y responder a POST
+    return render_template('register.html', form=form)
 
