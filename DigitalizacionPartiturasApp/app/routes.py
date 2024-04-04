@@ -19,6 +19,5 @@ def login():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     form = RegistrationForm()
-    # Lógica para validar el formulario y responder a POST
     return render_template('register.html', form=form)
 

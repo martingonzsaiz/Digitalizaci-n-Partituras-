@@ -1,9 +1,14 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+from config import Config
+
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'partituras2024ubu'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///tu_base_de_datos.db'
+app.config.from_object('config.Config')
+
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 
 from . import routes
+
