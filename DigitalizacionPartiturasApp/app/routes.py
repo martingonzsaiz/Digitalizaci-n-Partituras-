@@ -32,8 +32,8 @@ def register():
         else:
             existing_user = User.query.filter_by(username=username).first()
             if existing_user is None:
-                hashed_password = generate_password_hash(password)
-                new_user = User(username=username, password_hash=hashed_password)
+                new_user = User(username=username, password_hash=password)
+                new_user.set_password(password)
                 db.session.add(new_user)
                 db.session.commit()
                 flash('El usuario se ha registrado correctamente')
