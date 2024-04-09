@@ -1,6 +1,4 @@
 from flask import render_template, request, redirect, url_for, flash
-from werkzeug.security import generate_password_hash
-from app.forms import LoginForm, RegistrationForm
 from app.models import User
 from app import app, db
 
@@ -13,8 +11,8 @@ def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        user = User.query.filter_by(username=username).first()
-        if user and user.check_password(password):
+        user = User.query.filter_by(username=username, password=password).first()
+        if user:
             return redirect(url_for('home'))
         else:
             return 'Usuario o contraseña inválida'
@@ -28,17 +26,18 @@ def register():
         password2 = request.form['password2']
         
         if password != password2:
-            return 'Las contraseñas no coinciden.'
+            flash('Las contraseñas no coinciden.')
+            return render_template('register.html')
         else:
             existing_user = User.query.filter_by(username=username).first()
             if existing_user is None:
-                new_user = User(username=username, password_hash=password)
-                new_user.set_password(password)
+                new_user = User(username=username, password=password)
                 db.session.add(new_user)
                 db.session.commit()
                 flash('El usuario se ha registrado correctamente')
                 return redirect(url_for('login'))
             else:
-                return 'El nombre de usuario ya existe.'
-    return render_template('register.html')
-
+                flash('El nombre de usuario ya existe.')
+                return render_template('register.html')
+    else:
+        return render_template('register.html')
