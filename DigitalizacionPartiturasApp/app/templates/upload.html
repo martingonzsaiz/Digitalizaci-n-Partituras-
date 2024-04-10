@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    Subir Partitura
+</head>
+<body>
+
+<form method="post" action="{{ url_for('upload') }}" enctype="multipart/form-data">
+    <label for="title">Título de la partitura:</label>
+    <input type="text" id="title" name="title" required><br>
+
+    <label for="pdf">Archivo PDF:</label>
+    <input type="file" id="pdf" name="pdf" accept=".pdf" required><br>
+
+    <input type="submit" value="Subir">
+</form>
+
+</body>
+</html>
