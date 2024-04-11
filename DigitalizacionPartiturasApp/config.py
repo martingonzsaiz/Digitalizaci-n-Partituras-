@@ -1,3 +1,4 @@
+from datetime import timedelta
 import os
 
 class Config:
@@ -5,3 +6,4 @@ class Config:
     SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:@localhost/partituras_db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     UPLOAD_FOLDER = '/Users/tomli/Desktop/gii/TFG_Partituras/partituras/uploaded_sheets'
+    PERMANENT_SESSION_LIFETIME = timedelta(days=1)

@@ -1,4 +1,5 @@
-from flask import render_template, request, redirect, url_for, flash, current_app
+from flask import render_template, request, redirect, url_for, flash, current_app, session
+from flask_login import login_user, login_required, logout_user
 from app.models import User
 from werkzeug.utils import secure_filename
 import os
@@ -16,10 +17,18 @@ def login():
         password = request.form['password']
         user = User.query.filter_by(username=username, password=password).first()
         if user:
-            return redirect(url_for('home'))
+            login_user(user, remember=False)
+            return redirect(url_for('menu'))
         else:
             return 'Usuario o contraseña inválida'
     return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    logout_user()
+    session.clear()
+    # current_user.is_authenticated
+    return redirect(url_for('home'))
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -45,7 +54,13 @@ def register():
     else:
         return render_template('register.html')
     
+@app.route('/menu', methods=['GET'])
+@login_required
+def menu():
+        return render_template('menu.html')
+    
 @app.route('/upload', methods=['GET', 'POST'])
+@login_required
 def upload():
     if request.method == 'POST':
         title = request.form['title']
