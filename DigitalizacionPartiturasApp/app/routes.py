@@ -27,7 +27,6 @@ def login():
 def logout():
     logout_user()
     session.clear()
-    # current_user.is_authenticated
     return redirect(url_for('home'))
 
 @app.route('/register', methods=['GET', 'POST'])
