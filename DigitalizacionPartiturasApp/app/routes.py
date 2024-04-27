@@ -1,4 +1,7 @@
 from flask import render_template, request, redirect, url_for, flash, current_app, session
+from flask import Flask, request, send_file
+import subprocess
+from flask import send_from_directory
 from flask_login import login_user, login_required, logout_user
 from app.models import User
 from werkzeug.utils import secure_filename
@@ -63,21 +66,25 @@ def menu():
 def upload():
     if request.method == 'POST':
         title = request.form['title']
-        pdf = request.files['pdf']
+        file = request.files['file']
 
-        if pdf and allowed_file(pdf.filename):
-            filename = secure_filename(pdf.filename)
-            pdf_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
-            pdf.save(pdf_path)
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+            file.save(file_path)
 
-            new_sheetmusic = SheetMusic(title=title, pdf_path=pdf_path)
+            new_sheetmusic = SheetMusic(title=title, file_path=file_path)
             db.session.add(new_sheetmusic)
             db.session.commit()
-            flash('Partitura subida correctamente!')
-            return redirect(url_for('home'))
+            flash('Partitura subida correctamente')
+            return redirect(url_for('menu'))
 
     return render_template('upload.html')
 
 def allowed_file(filename):
-    return filename.lower().endswith('.pdf')
+    return filename.lower().endswith(('.pdf' , '.png' , '.jpg' , '.jpeg'))
+
+
+
+
 

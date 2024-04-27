@@ -13,7 +13,7 @@ class User(db.Model, UserMixin):
 class SheetMusic(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(120), nullable=False)
-    pdf_path = db.Column(db.String(300))
+    file_path = db.Column(db.String(300))
     upload_date = db.Column(db.DateTime, default=datetime.now)
 
     def __repr__(self):
