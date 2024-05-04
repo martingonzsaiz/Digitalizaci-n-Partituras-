@@ -1,13 +1,11 @@
-from flask import render_template, request, redirect, url_for, flash, current_app, session
-from flask import Flask, request, send_file
-import subprocess
-from flask import send_from_directory
+from google.cloud import storage
+from flask import render_template, request, redirect, url_for, flash, current_app, session, Flask, send_from_directory
 from flask_login import login_user, login_required, logout_user
-from app.models import User
-from werkzeug.utils import secure_filename
+import subprocess
 import os
-from app.models import SheetMusic
+from werkzeug.utils import secure_filename
 from app import app, db
+from app.models import User, SheetMusic
 
 @app.route('/home', methods=['GET'])
 def home():
@@ -70,21 +68,28 @@ def upload():
 
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
-            file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
-            file.save(file_path)
+            bucket_name = 'partituras'
 
-            new_sheetmusic = SheetMusic(title=title, file_path=file_path)
-            db.session.add(new_sheetmusic)
-            db.session.commit()
-            flash('Partitura subida correctamente')
-            return redirect(url_for('menu'))
+            try:
+                client = storage.Client()
+                bucket = client.get_bucket(bucket_name)
+
+                blob = bucket.blob(filename)
+
+                blob.upload_from_string(file.read(), content_type=file.content_type)
+
+                file_path = f"gs://{bucket_name}/{filename}"
+                new_sheetmusic = SheetMusic(title=title, file_path=file_path)
+                db.session.add(new_sheetmusic)
+                db.session.commit()
+                flash('Partitura subida correctamente')
+                return redirect(url_for('file_registered', sheet_music_id=new_sheetmusic.id))
+            except Exception as e:
+                flash(f'Error al subir archivo: {str(e)}')
+                return redirect(url_for('upload'))
 
     return render_template('upload.html')
 
+
 def allowed_file(filename):
-    return filename.lower().endswith(('.pdf' , '.png' , '.jpg' , '.jpeg'))
-
-
-
-
-
+    return filename.lower().endswith(('.pdf', '.png', '.jpg', '.jpeg'))
