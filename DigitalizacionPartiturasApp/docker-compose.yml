@@ -1,0 +1,20 @@
+version: '3'
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app
+    depends_on:
+      - audiveris
+
+  audiveris:
+    build:
+      context: ./path_to_audiveris
+      dockerfile: Dockerfile_audiveris
+    volumes:
+      - partituras_data:/data
+
+volumes:
+  partituras_data:
