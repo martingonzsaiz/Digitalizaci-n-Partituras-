@@ -12,7 +12,9 @@ RUN apt-get update && apt-get install -y \
 
 RUN sed -i '/disable ghostscript format types/,+6d' /etc/ImageMagick-6/policy.xml
 
-RUN pip3 install flask google-cloud-storage flask-login flask_sqlalchemy flask_migrate
+RUN pip3 install flask google-cloud-storage flask-login flask_sqlalchemy flask_migrate pymysql
+
+COPY hip-transducer-422216-m7-5b7489d00ae2.json /app/
 
 COPY . /app
 

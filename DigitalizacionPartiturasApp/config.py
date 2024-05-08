@@ -9,6 +9,6 @@ class Config:
     UPLOAD_FOLDER = '/Users/tomli/Desktop/gii/TFG_Partituras/partituras/uploaded_sheets'
     PERMANENT_SESSION_LIFETIME = timedelta(days=1)
 
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "C:/Users/tomli/Desktop/gii/TFG_Partituras/Digitalizacion-Partituras/DigitalizacionPartiturasApp/hip-transducer-422216-m7-5b7489d00ae2.json"
-
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/app/hip-transducer-422216-m7-5b7489d00ae2.json"
+    
     client = storage.Client()
