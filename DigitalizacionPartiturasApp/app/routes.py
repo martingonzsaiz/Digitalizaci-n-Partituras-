@@ -1,11 +1,15 @@
-from google.cloud import storage
-from flask import render_template, request, redirect, url_for, flash, current_app, session, Flask, send_from_directory
+from flask import render_template, request, redirect, url_for, flash, session
 from flask_login import login_user, login_required, logout_user
 import subprocess
 import os
 from werkzeug.utils import secure_filename
 from app import app, db
 from app.models import User, SheetMusic
+from google.cloud import storage
+
+def create_storage_client():
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = app.config['GOOGLE_APPLICATION_CREDENTIALS']
+    return storage.Client()
 
 @app.route('/home', methods=['GET'])
 def home():
@@ -57,39 +61,70 @@ def register():
 @app.route('/menu', methods=['GET'])
 @login_required
 def menu():
-        return render_template('menu.html')
+    return render_template('menu.html')
+
+def digitalize_sheet_music(input_dir):
+    executable_path = "/app/audiveris/build/distributions/Audiveris-5.3.1/bin/Audiveris"
+    output_dir = "/app/audiveris_output"
     
+    cmd = [
+        executable_path, 
+        '-batch', 
+        '-export', 
+        '-output', output_dir, 
+        '--', input_dir
+    ]
+    
+    try:
+        result = subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        print("Partitura digitalizada correctamente:", result.stdout.decode('utf-8'))
+    except subprocess.CalledProcessError as e:
+        print(f"Error durante la digitalización: {e.stderr.decode('utf-8')}")
+
+
+def allowed_file(filename):
+    return filename.lower().endswith(('.pdf', '.png', '.jpg', '.jpeg'))
+
 @app.route('/upload', methods=['GET', 'POST'])
 @login_required
 def upload():
     if request.method == 'POST':
         title = request.form['title']
         file = request.files['file']
-
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
-            bucket_name = 'partituras'
+            temp_file_path = os.path.join('/app/audiveris_input', filename)
+            file.save(temp_file_path)
 
-            try:
-                client = storage.Client()
-                bucket = client.get_bucket(bucket_name)
-
-                blob = bucket.blob(filename)
-
-                blob.upload_from_string(file.read(), content_type=file.content_type)
-
-                file_path = f"gs://{bucket_name}/{filename}"
-                new_sheetmusic = SheetMusic(title=title, file_path=file_path)
-                db.session.add(new_sheetmusic)
-                db.session.commit()
-                flash('Partitura subida correctamente')
-                return redirect(url_for('file_registered', sheet_music_id=new_sheetmusic.id))
-            except Exception as e:
-                flash(f'Error al subir archivo: {str(e)}')
-                return redirect(url_for('upload'))
+            flash('Partitura subida correctamente.')
+            return redirect(url_for('menu'))  
 
     return render_template('upload.html')
 
+@app.route('/digitalize', methods=['POST'])
+@login_required
+def digitalize():
+    filename = request.form['filename']
+    input_dir = os.path.join('/app/audiveris_input', filename)
 
-def allowed_file(filename):
-    return filename.lower().endswith(('.pdf', '.png', '.jpg', '.jpeg'))
+    try:
+        digitalize_sheet_music(input_dir)
+        flash('Partitura digitalizada correctamente.')
+    except Exception as e:
+        flash(f"Error durante la digitalización: {str(e)}")
+
+    return redirect(url_for('list_sheet_music'))
+
+
+@app.route('/list_sheet_music', methods=['GET'])
+@login_required
+def list_sheet_music():
+    input_folder = '/app/audiveris_input'
+    try:
+        sheet_music_files = os.listdir(input_folder)
+        sheet_music_files = [f for f in sheet_music_files if allowed_file(f)]
+    except Exception as e:
+        flash(f"Error al listar las partituras: {str(e)}")
+        sheet_music_files = []
+
+    return render_template('list_sheet_music.html', sheet_music_files=sheet_music_files)

@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Selecciona una Partitura para Digitalizar</h1>
+<form action="{{ url_for('digitalize') }}" method="post">
+    {% for file in sheet_music_files %}
+    <div>
+        <input type="radio" id="{{ file }}" name="filename" value="{{ file }}">
+        <label for="{{ file }}">{{ file }}</label>
+    </div>
+    {% endfor %}
+    <button type="submit">Digitalizar Seleccionada</button>
+</form>
+{% endblock %}

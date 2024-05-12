@@ -1,5 +1,6 @@
 FROM openjdk:17-jdk-slim-buster
 
+# Instalar dependencias necesarias
 RUN apt-get update && apt-get install -y \
     git \
     gradle \
@@ -8,18 +9,33 @@ RUN apt-get update && apt-get install -y \
     libfreetype6-dev \
     ghostscript \
     imagemagick \
-    python3-pip  
+    python3-pip \
+    default-mysql-client \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
+# Ajustes de configuración de ImageMagick
 RUN sed -i '/disable ghostscript format types/,+6d' /etc/ImageMagick-6/policy.xml
 
+# Instalar Python y librerías necesarias
 RUN pip3 install flask google-cloud-storage flask-login flask_sqlalchemy flask_migrate pymysql
 
+# Copiar archivos y configuración de Google Cloud
 COPY hip-transducer-422216-m7-5b7489d00ae2.json /app/
-
 COPY . /app
 
+# Clonar y construir Audiveris en el contenedor
+RUN if [ -d "/app/audiveris" ]; then rm -rf /app/audiveris; fi \
+    && git clone https://github.com/Audiveris/audiveris.git /app/audiveris \
+    && cd /app/audiveris \
+    && ./gradlew build \
+    && ./gradlew run
+
+# Establecer el directorio de trabajo
 WORKDIR /app
 
+# Exponer el puerto para Flask
 EXPOSE 5000
 
+# Comando para iniciar la aplicación
 CMD ["python3", "run.py"]
