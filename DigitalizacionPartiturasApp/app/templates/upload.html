@@ -1,19 +1,25 @@
 <!DOCTYPE html>
 <html>
 <head>
-    Upload a sheet
+    <title>Upload a Sheet</title>
 </head>
 <body>
 
+<h1>Upload a Sheet Music</h1>
+
 <form method="post" action="{{ url_for('upload') }}" enctype="multipart/form-data">
     <label for="title">Sheet title:</label>
-    <input type="text" id="title" name="title" required><br>
+    <input type="text" id="title" name="title" required><br><br>
 
     <label for="file">File:</label>
-    <input type="file" id="file" name="file" accept=".pdf, .jpg, .jpeg, .png" required><br>
+    <input type="file" id="file" name="file" accept=".pdf, .jpg, .jpeg, .png" required><br><br>
 
     <input type="submit" value="Subir">
 </form>
+
+<br>
+<a href="{{ url_for('menu') }}">Return to Menu</a>
+<a href="{{ url_for('list_sheet_music') }}">View Uploaded Sheets</a>
 
 </body>
 </html>

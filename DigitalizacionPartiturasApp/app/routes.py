@@ -1,4 +1,5 @@
-from flask import render_template, request, redirect, url_for, flash, session
+import sys
+from flask import current_app, render_template, request, redirect, url_for, flash, session
 from flask_login import login_user, login_required, logout_user
 import subprocess
 import os
@@ -64,22 +65,29 @@ def menu():
     return render_template('menu.html')
 
 def digitalize_sheet_music(input_dir):
-    executable_path = "/app/audiveris/build/distributions/Audiveris-5.3.1/bin/Audiveris"
-    output_dir = "/app/audiveris_output"
-    
+    output_dir = app.config['AUDIVERIS_OUTPUT']
+    base_class_path = os.path.join(app.config['base_dir'], 'audiveris', 'build', 'distributions', 'Audiveris-5.3.1', 'lib', '*')
+    java_executable = 'C:\\Program Files\\Java\\jdk-17\\bin\\java.exe'  
+
     cmd = [
-        executable_path, 
-        '-batch', 
-        '-export', 
-        '-output', output_dir, 
+        java_executable,  
+        '-cp', base_class_path,
+        'org.audiveris.Main',  
+        '-batch', '-export',
+        '-output', output_dir,
         '--', input_dir
     ]
     
+    print("hola", file=sys.stdout)
+    current_app.logger.debug("Comando a ejecutar: %s", " ".join(cmd))  
+    
     try:
         result = subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        print("Partitura digitalizada correctamente:", result.stdout.decode('utf-8'))
+        current_app.logger.info("Partitura digitalizada correctamente: %s", result.stdout.decode('utf-8'))
     except subprocess.CalledProcessError as e:
-        print(f"Error durante la digitalización: {e.stderr.decode('utf-8')}")
+        current_app.logger.error("Error durante la digitalización: %s", e.stderr.decode('utf-8'))
+    except Exception as e:
+        current_app.logger.error("Otro error al digitalizar la partitura: %s", str(e))
 
 
 def allowed_file(filename):
@@ -93,7 +101,7 @@ def upload():
         file = request.files['file']
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
-            temp_file_path = os.path.join('/app/audiveris_input', filename)
+            temp_file_path = os.path.join(app.config['AUDIVERIS_INPUT'], filename)
             file.save(temp_file_path)
 
             flash('Partitura subida correctamente.')
@@ -105,7 +113,7 @@ def upload():
 @login_required
 def digitalize():
     filename = request.form['filename']
-    input_dir = os.path.join('/app/audiveris_input', filename)
+    input_dir = os.path.join(app.config['AUDIVERIS_INPUT'], filename)
 
     try:
         digitalize_sheet_music(input_dir)
@@ -119,7 +127,7 @@ def digitalize():
 @app.route('/list_sheet_music', methods=['GET'])
 @login_required
 def list_sheet_music():
-    input_folder = '/app/audiveris_input'
+    input_folder = app.config['AUDIVERIS_INPUT']
     try:
         sheet_music_files = os.listdir(input_folder)
         sheet_music_files = [f for f in sheet_music_files if allowed_file(f)]
