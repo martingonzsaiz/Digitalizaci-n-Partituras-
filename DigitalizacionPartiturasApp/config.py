@@ -5,6 +5,7 @@ from logging.handlers import RotatingFileHandler
 
 class Config:
     base_dir = 'C:/Users/tomli/Desktop/gii/TFG_Partituras/Digitalizacion-Partituras/DigitalizacionPartiturasApp'
+    print("Base dir desde config:", base_dir)
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'partituras2024ubu'
     SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:@localhost/partituras_db'
     # SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:@host.docker.internal/partituras_db' Configuración para el docker

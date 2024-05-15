@@ -1,0 +1,48 @@
+2024-05-15 18:59:35,885 ERROR: Error durante la digitalización: Error: Could not find or load main class org.audiveris.Main
+Caused by: java.lang.ClassNotFoundException: org.audiveris.Main
+ [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\app\routes.py:88]
+2024-05-15 19:01:17,404 ERROR: Error durante la digitalización: Error: Could not find or load main class org.audiveris.Main
+Caused by: java.lang.ClassNotFoundException: org.audiveris.Main
+ [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\app\routes.py:88]
+2024-05-15 19:14:08,221 ERROR: Error durante la digitalización: Error: Could not find or load main class org.audiveris.Main
+Caused by: java.lang.ClassNotFoundException: org.audiveris.Main
+ [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\app\routes.py:88]
+2024-05-15 19:14:27,735 ERROR: Error durante la digitalización: Error: Could not find or load main class org.audiveris.Main
+Caused by: java.lang.ClassNotFoundException: org.audiveris.Main
+ [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\app\routes.py:88]
+2024-05-15 19:16:59,651 ERROR: Error durante la digitalización: Error: Could not find or load main class org.audiveris.Main
+Caused by: java.lang.ClassNotFoundException: org.audiveris.Main
+ [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\app\routes.py:88]
+2024-05-15 19:17:38,157 ERROR: Error durante la digitalización: Error: Could not find or load main class org.audiveris.Main
+Caused by: java.lang.ClassNotFoundException: org.audiveris.Main
+ [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\app\routes.py:88]
+2024-05-15 19:19:53,300 ERROR: Error durante la digitalización: Error: Could not find or load main class org.audiveris.Main
+Caused by: java.lang.ClassNotFoundException: org.audiveris.Main
+ [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\app\routes.py:88]
+2024-05-15 19:55:41,929 ERROR: Error durante la digitalización: Error: Could not find or load main class org.audiveris.Main
+Caused by: java.lang.ClassNotFoundException: org.audiveris.Main
+ [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\app\routes.py:88]
+2024-05-15 20:01:38,171 ERROR: Error durante la digitalización: Error: Could not find or load main class org.audiveris.Main
+Caused by: java.lang.ClassNotFoundException: org.audiveris.Main
+ [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\app\routes.py:88]
+2024-05-15 20:10:53,123 ERROR: Error durante la digitalización: Error: Could not find or load main class org.audiveris.Main
+Caused by: java.lang.ClassNotFoundException: org.audiveris.Main
+ [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\app\routes.py:88]
+2024-05-15 20:11:45,453 ERROR: Error durante la digitalización: Error: Could not find or load main class org.audiveris.Main
+Caused by: java.lang.ClassNotFoundException: org.audiveris.Main
+ [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\app\routes.py:88]
+2024-05-15 20:20:19,264 ERROR: Error durante la digitalización: Error: Could not find or load main class org.audiveris.Main
+Caused by: java.lang.ClassNotFoundException: org.audiveris.Main
+ [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\app\routes.py:88]
+2024-05-15 20:20:58,049 ERROR: Error durante la digitalización: Error: Could not find or load main class org.audiveris.Main
+Caused by: java.lang.ClassNotFoundException: org.audiveris.Main
+ [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\app\routes.py:88]
+2024-05-15 20:30:13,604 ERROR: Error durante la digitalización: Error: Could not find or load main class org.audiveris.Main
+Caused by: java.lang.ClassNotFoundException: org.audiveris.Main
+ [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\app\routes.py:88]
+2024-05-15 20:31:28,881 ERROR: Error durante la digitalización: Error: Could not find or load main class org.audiveris.Main
+Caused by: java.lang.ClassNotFoundException: org.audiveris.Main
+ [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\app\routes.py:88]
+2024-05-15 21:20:02,202 ERROR: Error durante la digitalización: Error: Could not find or load main class org.audiveris.Main
+Caused by: java.lang.ClassNotFoundException: org.audiveris.Main
+ [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\app\routes.py:88]
