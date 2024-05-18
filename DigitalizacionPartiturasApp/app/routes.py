@@ -4,6 +4,7 @@ from flask_login import login_user, login_required, logout_user
 import subprocess
 import os
 from werkzeug.utils import secure_filename
+import bcrypt
 from app import app, db
 from app.models import User, SheetMusic
 from google.cloud import storage
@@ -21,13 +22,15 @@ def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        user = User.query.filter_by(username=username, password=password).first()
-        if user:
+        user = User.query.filter_by(username=username).first()
+        if user and bcrypt.checkpw(password.encode('utf-8'), user.password.encode('utf-8')):
             login_user(user, remember=False)
             return redirect(url_for('menu'))
         else:
-            return 'Usuario o contraseña inválida'
+            flash('Usuario o contraseña inválida')
+            return render_template('login.html')
     return render_template('login.html')
+
 
 @app.route('/logout')
 def logout():
@@ -48,7 +51,8 @@ def register():
         else:
             existing_user = User.query.filter_by(username=username).first()
             if existing_user is None:
-                new_user = User(username=username, password=password)
+                hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+                new_user = User(username=username, password=hashed_password.decode('utf-8'))
                 db.session.add(new_user)
                 db.session.commit()
                 flash('El usuario se ha registrado correctamente')
@@ -66,25 +70,22 @@ def menu():
 
 def digitalize_sheet_music(input_dir):
     output_dir = current_app.config['AUDIVERIS_OUTPUT']
-    audiveris_bat = 'C:\\Users\\tomli\\Desktop\\gii\\TFG_Partituras\\Digitalizacion-Partituras\\DigitalizacionPartiturasApp\\audiveris\\build\\distributions\\Audiveris-5.3.1\\bin\\Audiveris.bat'
+    batch_script = os.path.join('C:\\Users\\tomli\\Desktop\\gii\\TFG_Partituras\\Digitalizacion-Partituras\\DigitalizacionPartiturasApp\\audiveris\\build\\distributions\\Audiveris-5.3.1\\bin', 'run_audiveris.bat')
     
-    cmd = [
-        audiveris_bat,
-        '-batch', '-export',
-        '-output', output_dir,
-        '--', input_dir
-    ]
+    cmd = [batch_script, input_dir]
     
     print("Comando a ejecutar:", cmd, file=sys.stdout)
     current_app.logger.debug("Comando a ejecutar: %s", cmd)
 
     try:
-        result = subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        result = subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         current_app.logger.info("Partitura digitalizada correctamente: %s", result.stdout.decode('utf-8'))
     except subprocess.CalledProcessError as e:
         current_app.logger.error("Error durante la digitalización: %s", e.stderr.decode('utf-8'))
     except Exception as e:
         current_app.logger.error("Otro error al digitalizar la partitura: %s", str(e))
+
+
 
 def allowed_file(filename):
     return filename.lower().endswith(('.pdf', '.png', '.jpg', '.jpeg'))
