@@ -1,26 +1,31 @@
-from datetime import timedelta
 import os
+from datetime import timedelta
 import logging
 from logging.handlers import RotatingFileHandler
+from firebase_admin import credentials
 
 class Config:
-    base_dir = 'C:/Users/tomli/Desktop/gii/TFG_Partituras/Digitalizacion-Partituras/DigitalizacionPartiturasApp'
-    print("Base dir desde config:", base_dir)
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'partituras2024ubu'
+    SECRET_KEY = os.environ.get('SECRET_KEY', 'partituras2024ubu')
     SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:@localhost/partituras_db'
-    # SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:@host.docker.internal/partituras_db' Configuración para el docker
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    UPLOAD_FOLDER = os.path.join(base_dir, 'partituras', 'uploaded_sheets')
-    # UPLOAD_FOLDER = '/app/uploaded_sheets' Configuración para el docker 
+    UPLOAD_FOLDER = 'C:/Users/tomli/Desktop/gii/TFG_Partituras/Digitalizacion-Partituras/DigitalizacionPartiturasApp/partituras/uploaded_sheets'
     PERMANENT_SESSION_LIFETIME = timedelta(days=1)
-    # GOOGLE_APPLICATION_CREDENTIALS = "/app/hip-transducer-422216-m7-5b7489d00ae2.json" Configuración para el docker
-    GOOGLE_APPLICATION_CREDENTIALS = os.path.join(base_dir, "hip-transducer-422216-m7-5b7489d00ae2.json")
-    # AUDIVERIS_INPUT = '/app/audiveris_input' Configuración para el docker 
-    AUDIVERIS_INPUT = os.path.join(base_dir, 'audiveris_input')
-    AUDIVERIS_OUTPUT = os.path.join(base_dir, 'audiveris_output')
-    EXECUTABLE_PATH = os.path.join(base_dir, 'audiveris', 'build', 'distributions', 'Audiveris-5.3.1', 'bin', 'Audiveris')
-    JAVA_EXECUTABLE = "java"
-    AUDIVERIS_CLASSPATH = os.path.join(base_dir, 'audiveris', 'build', 'distributions', 'Audiveris-5.3.1', 'lib', '*')
+    FIREBASE_CREDENTIALS = 'C:/Users/tomli/Desktop/gii/TFG_Partituras/sheet-transcribe-firebase-adminsdk-stggh-ac484e2751.json'
+    FIREBASE_BUCKET_NAME = 'sheet-transcribe.appspot.com'
+    AUDIVERIS_INPUT = 'C:/Users/tomli/Desktop/gii/TFG_Partituras/Digitalizacion-Partituras/DigitalizacionPartiturasApp/audiveris_input'
+    AUDIVERIS_OUTPUT = 'C:/Users/tomli/Desktop/gii/TFG_Partituras/Digitalizacion-Partituras/DigitalizacionPartiturasApp/audiveris_output'
+    LOG_TO_STDOUT = os.environ.get('LOG_TO_STDOUT', 'true')
+    
+    FIREBASE_CONFIG = {
+        "apiKey": "AIzaSyDWnvC205VEIMrRhwqgRavndvfAeiGkGaY",
+        "authDomain": "sheet-transcribe.firebaseapp.com",
+        "projectId": "sheet-transcribe",
+        "storageBucket": "sheet-transcribe.appspot.com",
+        "messagingSenderId": "842930665850",
+        "appId": "1:842930665850:web:ecb1dbf50a0583be36fec3",
+        "measurementId": "G-06V85QSKVF",
+        "databaseURL": ""
+    }
 
 def configure_logging(app):
     if not os.path.exists('logs'):
@@ -29,5 +34,13 @@ def configure_logging(app):
     file_handler.setFormatter(logging.Formatter(
         '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
     ))
+    file_handler.setLevel(logging.INFO)
     app.logger.addHandler(file_handler)
+
+    if app.config.get('LOG_TO_STDOUT'):
+        stream_handler = logging.StreamHandler()
+        stream_handler.setLevel(logging.INFO)
+        app.logger.addHandler(stream_handler)
+
     app.logger.setLevel(logging.INFO)
+    app.logger.info('Logging is set up.')

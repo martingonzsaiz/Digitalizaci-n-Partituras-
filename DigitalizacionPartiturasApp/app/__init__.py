@@ -2,55 +2,71 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
-try:
-    from config import Config, configure_logging
-    # print("Configuración importada correctamente.")
-except ImportError as e:
-    print("Error al importar configuración:", e)
-    
-app = Flask(__name__)
-# print("Aplicación Flask creada.")
+from flask import current_app
+from config import Config, configure_logging
+from firebase_admin import credentials, initialize_app, firestore, storage
+from .routes import configure_routes
+from .models import User
+import pyrebase
+import logging
 
-try:
+db = SQLAlchemy()
+migrate = Migrate()
+login_manager = LoginManager()
+
+def create_app():
+    app = Flask(__name__)
     app.config.from_object(Config)
-    app.config['base_dir'] = Config.base_dir
-    # print("Configuración cargada:")
-    # print(app.config)  
-    # print('Base dir:', app.config.get('base_dir'))  
-except Exception as e:
-    print("Error al cargar configuración:", e)
 
-try:
     configure_logging(app)
-    # print("Logging configurado.")
-except Exception as e:
-    print("Error al configurar logging:", e)
+
+    init_login(app)
+    db.init_app(app)
+    migrate.init_app(app, db)
+    init_firebase(app)
+
+    configure_routes(app)
+
+    return app
+
+def init_login(app):
+    login_manager.init_app(app)
+    login_manager.login_view = 'main.login'
+    login_manager.login_message_category = 'info'
+
+def init_firebase(app):
+    creds_path = app.config['FIREBASE_CREDENTIALS']
+    cred = credentials.Certificate(creds_path)
+    firebase_admin = initialize_app(cred, {'storageBucket': app.config['FIREBASE_BUCKET_NAME']})
+
+    firestore_db = firestore.client()
     
-db = SQLAlchemy(app)
-# print("SQLAlchemy inicializado.")
+    firebase_bucket = storage.bucket(app.config['FIREBASE_BUCKET_NAME'])
 
-migrate = Migrate(app, db)
-# print("Migrate configurado.")
+    firebase_config = app.config['FIREBASE_CONFIG']
+    firebase_app = pyrebase.initialize_app(firebase_config)
+    firebase_db = firebase_app.database()
+    auth = firebase_app.auth()
 
-login_manager = LoginManager(app)
-login_manager.login_view = 'login'
-# print("LoginManager configurado.")
+    app.config['firestore_db'] = firestore_db
+    app.config['firebase_db'] = firebase_db
+    app.config['firebase_auth'] = auth
+    app.config['firebase_storage'] = firebase_bucket
 
-try:
-    from .models import User
-    # print("Modelos importados correctamente.")
-except ImportError as e:
-    print("Error al importar modelos:", e)
+    logging.info("Firebase se ha inicializado correctamente.")
     
 @login_manager.user_loader
 def load_user(user_id):
-    try:
-        return User.query.get(int(user_id))
-    except Exception as e:
-        print("Error al cargar usuario:", e)
+    firestore_db = current_app.config.get('firestore_db')
+    if not firestore_db:
+        current_app.logger.error("Firestore DB no es accesible para el usuario.")
+        return None
 
-try:
-    from . import routes
-    # print("Rutas importadas correctamente.")
-except ImportError as e:
-    print("Error al importar rutas:", e)
+    user_ref = firestore_db.collection('users').document(user_id)
+    user_snapshot = user_ref.get()
+    if user_snapshot.exists:
+        user_data = user_snapshot.to_dict()
+        return User(username=user_data['username'], email=user_data['email'], passwordHash=user_data['passwordHash'])
+    else:
+        return None
+
