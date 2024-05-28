@@ -1,8 +1,12 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, current_app
 from werkzeug.utils import secure_filename
 from flask_login import login_user, logout_user, login_required, current_user
-from .models import User, SheetMusic
+from .models import User
+from google.cloud import storage
+import firebase_admin
+from firebase_admin import credentials, initialize_app
+import tempfile
 import bcrypt
 import subprocess
 import os
@@ -96,16 +100,17 @@ def register():
 def menu():
     return render_template('menu.html')
 
-def digitalize_sheet_music(input_dir):
-    output_dir = os.getenv('AUDIVERIS_OUTPUT', './output')
-    batch_script = os.path.join(os.getenv('AUDIVERIS_BIN', '.'), 'run_audiveris.bat')
-    
-    cmd = [batch_script, input_dir]
+def digitalize_sheets(file_path):
+    batch_script = os.path.join('C:/Users/tomli/Desktop/gii/TFG_Partituras/Digitalizacion-Partituras/DigitalizacionPartiturasApp/audiveris/build/distributions/Audiveris-5.3.1/bin', 'run_audiveris.bat')
+    # batch_script = os.path.join('app/audiveris', 'run_audiveris.bat')
+
+    cmd = [batch_script, file_path]
     try:
-        result = subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-        current_app.logger.info("Partitura digitalizada correctamente: %s", result.stdout.decode('utf-8'))
+        result = subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        print("Partitura digitalizada correctamente:", result.stdout.decode('utf-8'))
     except subprocess.CalledProcessError as e:
-        current_app.logger.error("Error durante la digitalización: %s", e.stderr.decode('utf-8'))
+        print("Error durante la digitalización:", e.stderr.decode('utf-8'))
+
     except Exception as e:
         current_app.logger.error("Otro error al digitalizar la partitura: %s", str(e))
         
@@ -130,16 +135,48 @@ def upload():
 
     return render_template('upload.html')
 
+def download_sheets(bucket_name, file_name):
+    username = current_user.get_id()
+    file_extension = file_name.split('.')[-1]
+    if file_extension in ['pdf']:
+        file_type_folder = 'pdf'
+    elif file_extension in ['png', 'jpg', 'jpeg']:
+        file_type_folder = 'images'
+    full_blob_name = f"partituras/user_{username}/{file_type_folder}/{file_name}"
+
+    if not firebase_admin._apps:
+        cred_path = current_app.config['FIREBASE_CREDENTIALS']
+        cred = credentials.Certificate(cred_path)
+        firebase_admin.initialize_app(cred)
+    else:
+        cred = firebase_admin.get_app().credential.get_credential()
+
+    storage_client = storage.Client(credentials=cred, project=cred.project_id)
+    bucket = storage_client.bucket(bucket_name)
+    blob = bucket.blob(full_blob_name)
+    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=f'.{file_extension}')
+
+    blob.download_to_filename(temp_file.name)
+    temp_file.close()  
+    print('Archivo descargado en:', temp_file.name)
+    # temp_dir = tempfile.gettempdir()
+    
+    # temp_contents = os.listdir(temp_dir)
+    
+    # full_paths = [os.path.join(temp_dir, file) for file in temp_contents]
+
+    # for item in full_paths:
+    #     print(item)
+    return temp_file.name
+
 @main.route('/digitalize', methods=['POST'])
 @login_required
 def digitalize():
     filename = request.form['filename']
-    input_dir = os.path.join(current_app.config['AUDIVERIS_INPUT'], filename)
-    try:
-        digitalize_sheet_music(input_dir)
-        flash('Partitura digitalizada correctamente.')
-    except Exception as e:
-        flash(f"Error durante la digitalización: {str(e)}")
+    input_file_path = download_sheets(current_app.config['FIREBASE_BUCKET_NAME'], filename)
+    print(input_file_path)
+    digitalize_sheets(input_file_path)
+    flash('Partitura digitalizada correctamente.')
     return redirect(url_for('main.list_sheet_music'))
 
 @main.route('/list_sheet_music', methods=['GET'])
