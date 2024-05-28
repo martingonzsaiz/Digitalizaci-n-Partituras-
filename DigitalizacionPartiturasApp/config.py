@@ -2,20 +2,15 @@ import os
 from datetime import timedelta
 import logging
 from logging.handlers import RotatingFileHandler
-from firebase_admin import credentials
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY', 'partituras2024ubu')
-    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:@localhost/partituras_db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     UPLOAD_FOLDER = 'C:/Users/tomli/Desktop/gii/TFG_Partituras/Digitalizacion-Partituras/DigitalizacionPartiturasApp/partituras/uploaded_sheets'
     PERMANENT_SESSION_LIFETIME = timedelta(days=1)
-    FIREBASE_CREDENTIALS = '/app/sheet-transcribe-firebase-adminsdk-stggh-ac484e2751.json'
+    FIREBASE_CREDENTIALS = 'C:/Users/tomli/Desktop/gii/TFG_Partituras/Digitalizacion-Partituras/DigitalizacionPartiturasApp/sheet-transcribe-firebase-adminsdk-stggh-ac484e2751.json'
+    # FIREBASE_CREDENTIALS = '/app/sheet-transcribe-firebase-adminsdk-stggh-ac484e2751.json'
     FIREBASE_BUCKET_NAME = 'sheet-transcribe.appspot.com'
-    AUDIVERIS_INPUT = 'C:/Users/tomli/Desktop/gii/TFG_Partituras/Digitalizacion-Partituras/DigitalizacionPartiturasApp/audiveris_input'
-    AUDIVERIS_OUTPUT = 'C:/Users/tomli/Desktop/gii/TFG_Partituras/Digitalizacion-Partituras/DigitalizacionPartiturasApp/audiveris_output'
-    LOG_TO_STDOUT = os.environ.get('LOG_TO_STDOUT', 'true')
-    
     FIREBASE_CONFIG = {
         "apiKey": "AIzaSyDWnvC205VEIMrRhwqgRavndvfAeiGkGaY",
         "authDomain": "sheet-transcribe.firebaseapp.com",
@@ -26,6 +21,7 @@ class Config:
         "measurementId": "G-06V85QSKVF",
         "databaseURL": ""
     }
+    LOG_TO_STDOUT = os.environ.get('LOG_TO_STDOUT', 'true')
 
 def configure_logging(app):
     if not os.path.exists('logs'):
