@@ -16,14 +16,19 @@
             width: 300px; 
             margin-top: 10px;
         }
+        .custom-yellow {
+            background-color: #ffcc00;
+            border-color: #ffcc00;
+            color: black;
+        }
     </style>
 </head>
 <body>
     <div class="container menu-container">
         <h1 class="mb-4">Menú</h1>
         <a href="{{ url_for('main.upload') }}" class="btn btn-primary menu-button">Subir Partitura</a>
-        <a href="{{ url_for('main.list_sheet_music') }}" class="btn btn-secondary menu-button">Ver Partituras</a>
-        <a href="{{ url_for('main.list_digitalized_sheets') }}" class="btn btn-secondary menu-button">Ver Partituras Digitalizadas</a>
+        <a href="{{ url_for('main.list_sheet_music') }}" class="btn btn-info menu-button">Ver Partituras</a>
+        <a href="{{ url_for('main.list_digitalized_sheets') }}" class="btn custom-yellow menu-button">Ver Partituras Digitalizadas</a>
         <a href="{{ url_for('main.logout') }}" class="btn btn-danger menu-button">Cerrar Sesión</a>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>

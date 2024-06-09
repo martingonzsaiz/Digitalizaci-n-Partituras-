@@ -10,8 +10,11 @@
         <h1 class="mb-4">Partituras Digitalizadas</h1>
         <ul class="list-group">
             {% for sheet in sheet_music_files %}
-                <li class="list-group-item">
+                <li class="list-group-item d-flex justify-content-between align-items-center">
                     <a href="{{ sheet.url }}">{{ sheet.name }}</a>
+                    <form method="post" action="{{ url_for('main.delete_sheet', filename=sheet.name) }}">
+                        <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
+                    </form>
                 </li>
             {% endfor %}
         </ul>
