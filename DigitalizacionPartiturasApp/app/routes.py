@@ -1,6 +1,6 @@
 from datetime import timedelta
 import shutil
-from flask import Blueprint, render_template, request, redirect, send_from_directory, url_for, flash, session, current_app, send_file, Response
+from flask import Blueprint, get_flashed_messages, render_template, request, redirect, send_from_directory, url_for, flash, session, current_app, send_file, Response
 from werkzeug.utils import secure_filename
 from flask_login import login_user, logout_user, login_required, current_user
 from .models import SheetMusic, User
@@ -108,6 +108,8 @@ def menu():
 
 def digitalize_sheets(file_path, sheet_music):
     output_dir = 'C:/Users/tomli/Desktop/gii/TFG_Partituras/Digitalizacion-Partituras/DigitalizacionPartiturasApp/audiveris_output'
+    clean_directory(output_dir)
+
     batch_script = os.path.join('C:/Users/tomli/Desktop/gii/TFG_Partituras/Digitalizacion-Partituras/DigitalizacionPartiturasApp/audiveris/build/distributions/Audiveris-5.3.1/bin', 'run_audiveris.bat')
     cmd = [batch_script, file_path]
 
@@ -115,17 +117,56 @@ def digitalize_sheets(file_path, sheet_music):
         subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         current_app.logger.info(f"Digitalización completada para: {file_path}")
 
+        log_file = find_log_file(output_dir)
+        if log_file is None:
+            flash("No se encontró el archivo de log.", 'error')
+            return None, output_dir
+
+        is_valid, message = analyze_audiveris_log(log_file)
+        if not is_valid:
+            flash(message, 'error')
+            return None, output_dir
+
         for file in os.listdir(output_dir):
             if file.endswith('.mxl'):
                 return os.path.join(output_dir, file), output_dir
 
-        current_app.logger.error("No se encontró ningún archivo MXL en el directorio de salida.")
         flash("Error de digitalización: No se encontró ningún archivo MXL.", 'error')
         return None, output_dir
+
     except subprocess.CalledProcessError as e:
-        current_app.logger.error(f"Error durante la digitalización: {e.stderr.decode('utf-8')}")
-        flash("Error durante la digitalización.", 'error')
+        flash("Error durante la digitalización: " + e.stderr.decode('utf-8'), 'error')
         return None, output_dir
+    except Exception as e:
+        flash("Error al ejecutar Audiveris: " + str(e), 'error')
+        return None, output_dir
+
+def find_log_file(directory):
+    """Encuentra el archivo de log más reciente en el directorio especificado."""
+    log_files = [f for f in os.listdir(directory) if f.endswith('.log')]
+    if log_files:
+        latest_log = max(log_files, key=lambda x: os.path.getmtime(os.path.join(directory, x)))
+        return os.path.join(directory, latest_log)
+    return None
+
+def analyze_audiveris_log(log_file_path):
+    try:
+        with open(log_file_path, 'r') as file:
+            log_contents = file.read()
+        
+        if "the picture resolution is too low" in log_contents:
+            return False, "La resolución de la imagen es demasiado baja."
+        if "this sheet contains no staves" in log_contents:
+            return False, "La partitura no contiene pentagramas visibles."
+        if "invalid sheet" in log_contents:
+            return False, "Hoja inválida detectada."
+
+        return True, "Digitalización completada sin errores detectados."
+
+    except FileNotFoundError:
+        return False, "Archivo de log no encontrado."
+    except Exception as e:
+        return False, f"Error al leer el archivo de log: {str(e)}"
 
 def allowed_file(filename):
     return filename.lower().endswith(('.pdf', '.png', '.jpg', '.jpeg', '.mxl'))
@@ -191,12 +232,12 @@ def upload():
 
 def download_sheets(bucket_name, file_name):
     filename_only = file_name.split('/')[-1]
-    file_extension = filename_only.split('.')[-1]
-    file_type_folder = file_extension if file_extension in ['pdf', 'mxl'] else 'images'
-    username = current_user.get_id()
+    file_extension = filename_only.split('.')[-1].lower()
     
-    full_blob_name = f"partituras/user_{username}/{file_type_folder}/{filename_only}"
+    file_type_folder = file_extension
 
+    username = current_user.get_id()
+    full_blob_name = f"partituras/user_{username}/{file_type_folder}/{filename_only}"
     current_app.logger.info(f"Descargando archivo desde Firebase: {full_blob_name}")
 
     try:
@@ -211,9 +252,10 @@ def download_sheets(bucket_name, file_name):
         blob = bucket.blob(full_blob_name)
         temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=f'.{file_extension}')
         blob.download_to_filename(temp_file.name)
-        
+
         current_app.logger.info(f'Archivo descargado: {temp_file.name}')
         return temp_file.name
+
     except google.cloud.exceptions.NotFound:
         current_app.logger.error(f"Archivo no encontrado: {full_blob_name}")
         flash("Archivo no encontrado.", 'error')
