@@ -1,7 +1,7 @@
 import os
 from datetime import timedelta
 import logging
-from logging.handlers import RotatingFileHandler
+from logging.handlers import RotatingFileHandler, TimedRotatingFileHandler
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY', 'partituras2024ubu')
@@ -26,7 +26,7 @@ class Config:
 def configure_logging(app):
     if not os.path.exists('logs'):
         os.mkdir('logs')
-    file_handler = RotatingFileHandler('logs/myapp.log', maxBytes=10240, backupCount=10)
+    file_handler = TimedRotatingFileHandler('logs/myapp.log', when='midnight')
     file_handler.setFormatter(logging.Formatter(
         '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
     ))

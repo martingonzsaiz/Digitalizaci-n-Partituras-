@@ -14,6 +14,8 @@ import bcrypt
 import subprocess
 import os
 import google.api_core.exceptions
+import cv2
+import numpy as np
 import io
 from os import listdir
 
@@ -241,11 +243,6 @@ def download_sheets(bucket_name, file_name):
     current_app.logger.info(f"Descargando archivo desde Firebase: {full_blob_name}")
 
     try:
-        if not firebase_admin._apps:
-            cred_path = current_app.config['FIREBASE_CREDENTIALS']
-            cred = credentials.Certificate(cred_path)
-            firebase_admin.initialize_app(cred)
-
         os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = current_app.config['FIREBASE_CREDENTIALS']
         storage_client = storage.Client()
         bucket = storage_client.bucket(bucket_name)
@@ -299,7 +296,7 @@ def digitalize_and_view(filename):
 
                 clean_directory(output_dir)
 
-                flash('Partitura digitalizada y subida correctamente.')
+                flash('Partitura digitalizada correctamente.')
                 return redirect(url_for('main.list_digitalized_sheets'))
             except Exception as e:
                 current_app.logger.error(f"Error al subir el archivo digitalizado: {str(e)}")
@@ -307,6 +304,7 @@ def digitalize_and_view(filename):
                 return redirect(url_for('main.list_sheet_music'))
         else:
             flash('No se pudo digitalizar la partitura.', 'error')
+            flash('Preprocesa la imagen antes de digitalizarla.')
             return redirect(url_for('main.list_sheet_music'))
     else:
         return redirect(url_for('main.view_sheet', filename=filename))
@@ -412,6 +410,70 @@ def list_digitalized_sheets():
 
     return render_template('list_digitalized_sheets.html', sheet_music_files=sheet_music_files)
 
+def preprocess_image_for_ocr(file_path, median_kernel_size=5, adaptive_threshold_block_size=11, adaptive_threshold_c=2):
+    img = cv2.imread(file_path, cv2.IMREAD_GRAYSCALE)
+    if img is None:
+        raise FileNotFoundError(f"No se pudo cargar la imagen desde la ruta: {file_path}")
+    
+    img = cv2.medianBlur(img, median_kernel_size)
+    img = cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, adaptive_threshold_block_size, adaptive_threshold_c)
+    processed_file_path = file_path.replace(".png", "_processed.png")
+    cv2.imwrite(processed_file_path, img)
+    return processed_file_path
+
+@main.route('/preprocess/<path:filename>', methods=['GET'])
+@login_required
+def preprocess(filename):
+    current_app.logger.debug(f"Entrando a la ruta de preprocesamiento directo para el archivo: {filename}")
+    median_kernel_size = session.get('median_kernel_size', 5)
+    adaptive_threshold_block_size = session.get('adaptive_threshold_block_size', 11)
+    adaptive_threshold_c = session.get('adaptive_threshold_c', 2)
+
+    input_file_path = download_sheets(current_app.config['FIREBASE_BUCKET_NAME'], filename)
+    if input_file_path is None:
+        flash('No se pudo descargar el archivo para el preprocesamiento.', 'error')
+        current_app.logger.error("Archivo no encontrado en Firebase.")
+        return redirect(url_for('main.list_sheet_music'))
+
+    try:
+        processed_file_path = preprocess_image_for_ocr(input_file_path, median_kernel_size, adaptive_threshold_block_size, adaptive_threshold_c)
+        current_app.logger.debug(f"Archivo procesado correctamente: {processed_file_path}")
+        return send_file(processed_file_path, as_attachment=True)
+    except FileNotFoundError as e:
+        current_app.logger.error(f"No se pudo cargar la imagen desde la ruta: {str(e)}")
+        flash('Error al cargar la imagen para el preprocesamiento.', 'error')
+        return redirect(url_for('main.list_sheet_music'))
+    except Exception as e:
+        current_app.logger.error(f"Error al procesar la imagen: {str(e)}")
+        flash('Error al procesar la imagen.', 'error')
+        return redirect(url_for('main.list_sheet_music'))
+
+@main.route('/preprocess_form/<path:filename>', methods=['GET', 'POST'])
+@login_required
+def preprocess_form(filename):
+    current_app.logger.debug("Accediendo a la vista del formulario de preprocesamiento.")
+    if request.method == 'POST':
+        median_kernel_size = int(request.form.get('median_kernel_size', 5))
+        adaptive_threshold_block_size = int(request.form.get('adaptive_threshold_block_size', 11))
+        adaptive_threshold_c = int(request.form.get('adaptive_threshold_c', 2))
+        current_app.logger.info(f"Parámetros recibidos: MKS={median_kernel_size}, ATBS={adaptive_threshold_block_size}, ATC={adaptive_threshold_c}")
+
+        input_file_path = download_sheets(current_app.config['FIREBASE_BUCKET_NAME'], filename)
+        if input_file_path:
+            current_app.logger.debug(f"Archivo descargado correctamente para preprocesamiento: {input_file_path}")
+            try:
+                processed_file_path = preprocess_image_for_ocr(input_file_path, median_kernel_size, adaptive_threshold_block_size, adaptive_threshold_c)
+                return send_file(processed_file_path, as_attachment=True)
+            except Exception as e:
+                current_app.logger.error(f'Error en el preprocesamiento: {str(e)}')
+                flash(f'Error en el preprocesamiento: {str(e)}', 'error')
+                return redirect(request.url)
+        else:
+            flash('No se pudo descargar el archivo.', 'error')
+            current_app.logger.error("No se pudo descargar el archivo desde Firebase.")
+            return render_template('preprocess_form_page.html', filename=filename)
+
+    return render_template('preprocess_form_page.html', filename=filename)
 
 def configure_routes(app):
     app.register_blueprint(main)
