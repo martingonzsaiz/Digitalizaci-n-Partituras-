@@ -1,4 +1,5 @@
 from flask import Flask, Blueprint
+from flask_cors import CORS
 from config import Config, configure_logging
 from .extensions import migrate, login_manager, init_firebase
 from .firebase_utils import get_user
@@ -7,6 +8,7 @@ from .routes import configure_routes
 
 def create_app():
     app = Flask(__name__)
+    CORS(app)
     app.config.from_object(Config)
 
     init_firebase(app)
