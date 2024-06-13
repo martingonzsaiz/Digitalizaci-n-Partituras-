@@ -4,6 +4,8 @@ import shutil
 from flask import Blueprint, get_flashed_messages, render_template, request, redirect, send_from_directory, url_for, flash, session, current_app, send_file, Response
 from werkzeug.utils import secure_filename
 from flask_login import login_user, logout_user, login_required, current_user
+
+from app.extensions import load_credentials_from_file
 from .models import SheetMusic, User
 from google.cloud import storage
 import firebase_admin
@@ -246,8 +248,12 @@ def download_sheets(bucket_name, file_name):
     try:
         firebase_credentials_base64 = os.environ.get('FIREBASE_CREDENTIALS_JSON', '')
         cred_dict = json.loads(base64.b64decode(firebase_credentials_base64).decode('utf-8'))
-        cred = credentials.Certificate(cred_dict)
-        storage_client = storage.Client(credentials=cred, project=cred.project_id)
+        cred_path = "/tmp/serviceAccountKey.json"
+        with open(cred_path, "w") as cred_file:
+            cred_file.write(json.dumps(cred_dict))
+
+        credentials, project = load_credentials_from_file(cred_path)
+        storage_client = storage.Client(credentials=credentials, project=project)
         bucket = storage_client.bucket(bucket_name)
         blob = bucket.blob(full_blob_name)
         temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=f'.{file_extension}')
@@ -256,7 +262,7 @@ def download_sheets(bucket_name, file_name):
         current_app.logger.info(f'Archivo descargado: {temp_file.name}')
         return temp_file.name
 
-    except google.cloud.exceptions.NotFound:
+    except google.api_core.exceptions.NotFound:
         current_app.logger.error(f"Archivo no encontrado: {full_blob_name}")
         flash("Archivo no encontrado.", 'error')
         return None
