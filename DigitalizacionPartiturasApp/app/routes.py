@@ -243,7 +243,7 @@ def download_sheets(bucket_name, file_name):
     current_app.logger.info(f"Descargando archivo desde Firebase: {full_blob_name}")
 
     try:
-        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = current_app.config['FIREBASE_CREDENTIALS']
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = current_app.config['FIREBASE_CREDENTIALS_JSON']
         storage_client = storage.Client()
         bucket = storage_client.bucket(bucket_name)
         blob = bucket.blob(full_blob_name)
@@ -355,7 +355,7 @@ def view_sheet(filename):
     
     try:
         if not firebase_admin._apps:
-            cred_path = current_app.config['FIREBASE_CREDENTIALS']
+            cred_path = current_app.config['FIREBASE_CREDENTIALS_JSON']
             cred = credentials.Certificate(cred_path)
             firebase_admin.initialize_app(cred)
         else:
