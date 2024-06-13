@@ -355,8 +355,8 @@ def view_sheet(filename):
     
     try:
         if not firebase_admin._apps:
-            cred_path = current_app.config['FIREBASE_CREDENTIALS_JSON']
-            cred = credentials.Certificate(cred_path)
+            cred_dict = json.loads(base64.b64decode(current_app.config['FIREBASE_CREDENTIALS_JSON']).decode('utf-8'))
+            cred = credentials.Certificate(cred_dict)
             firebase_admin.initialize_app(cred)
         else:
             cred = firebase_admin.get_app().credential.get_credential()

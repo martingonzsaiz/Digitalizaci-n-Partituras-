@@ -1,3 +1,4 @@
+import base64
 from flask_login import LoginManager
 import firebase_admin
 from firebase_admin import credentials, firestore, storage
@@ -10,7 +11,7 @@ def init_firebase(app):
     try:
         firebase_admin.get_app()
     except ValueError:
-        cred_dict = json.loads(os.environ.get('FIREBASE_CREDENTIALS_JSON', '{}'))
+        cred_dict = json.loads(base64.b64decode(os.environ.get('FIREBASE_CREDENTIALS_JSON', '')).decode('utf-8'))
         cred = credentials.Certificate(cred_dict)
         firebase_admin.initialize_app(cred, {
             'storageBucket': app.config['FIREBASE_BUCKET_NAME']
