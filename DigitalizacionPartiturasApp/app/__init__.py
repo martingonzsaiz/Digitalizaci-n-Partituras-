@@ -1,7 +1,7 @@
 from flask import Flask
 from flask_cors import CORS
 from config import Config, configure_logging
-from .extensions import db, migrate, login_manager, init_firebase
+from .extensions import login_manager, init_firebase
 from .firebase_utils import get_user
 from .models import User
 from .routes import configure_routes
@@ -11,8 +11,6 @@ def create_app():
     CORS(app)
     app.config.from_object(Config)
 
-    # db.init_app(app)
-    # migrate.init_app(app, db)
     login_manager.init_app(app)
     init_firebase(app)
     configure_logging(app)

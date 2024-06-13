@@ -1,7 +1,10 @@
+from flask_login import LoginManager
 import firebase_admin
-from firebase_admin import credentials, initialize_app, firestore, storage
+from firebase_admin import credentials, firestore, storage
 import json
 import os
+
+login_manager = LoginManager()
 
 def init_firebase(app):
     try:
