@@ -4,7 +4,6 @@ import shutil
 from flask import Blueprint, get_flashed_messages, render_template, request, redirect, send_from_directory, url_for, flash, session, current_app, send_file, Response
 from werkzeug.utils import secure_filename
 from flask_login import login_user, logout_user, login_required, current_user
-
 from app.extensions import load_credentials_from_file
 from .models import SheetMusic, User
 from google.cloud import storage
@@ -248,9 +247,10 @@ def download_sheets(bucket_name, file_name):
     try:
         firebase_credentials_base64 = os.environ.get('FIREBASE_CREDENTIALS_JSON', '')
         cred_dict = json.loads(base64.b64decode(firebase_credentials_base64).decode('utf-8'))
-        cred_path = "/tmp/serviceAccountKey.json"
-        with open(cred_path, "w") as cred_file:
-            cred_file.write(json.dumps(cred_dict))
+        
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.json') as temp_cred_file:
+            temp_cred_file.write(json.dumps(cred_dict).encode())
+            cred_path = temp_cred_file.name
 
         credentials, project = load_credentials_from_file(cred_path)
         storage_client = storage.Client(credentials=credentials, project=project)
