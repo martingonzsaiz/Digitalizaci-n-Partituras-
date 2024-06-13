@@ -4,7 +4,7 @@ import shutil
 from flask import Blueprint, get_flashed_messages, render_template, request, redirect, send_from_directory, url_for, flash, session, current_app, send_file, Response
 from werkzeug.utils import secure_filename
 from flask_login import login_user, logout_user, login_required, current_user
-from app.extensions import load_credentials_from_file
+from app.extensions import load_credentials_from_file, load_credentials_from_info
 from .models import SheetMusic, User
 from google.cloud import storage
 import firebase_admin
@@ -246,13 +246,12 @@ def download_sheets(bucket_name, file_name):
 
     try:
         firebase_credentials_base64 = os.environ.get('FIREBASE_CREDENTIALS_JSON', '')
-        cred_dict = json.loads(base64.b64decode(firebase_credentials_base64).decode('utf-8'))
+        if not firebase_credentials_base64:
+            raise ValueError("La variable de entorno FIREBASE_CREDENTIALS_JSON no está configurada o está vacía.")
         
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.json') as temp_cred_file:
-            temp_cred_file.write(json.dumps(cred_dict).encode())
-            cred_path = temp_cred_file.name
+        cred_dict = json.loads(base64.b64decode(firebase_credentials_base64).decode('utf-8'))
+        credentials, project = load_credentials_from_info(cred_dict)
 
-        credentials, project = load_credentials_from_file(cred_path)
         storage_client = storage.Client(credentials=credentials, project=project)
         bucket = storage_client.bucket(bucket_name)
         blob = bucket.blob(full_blob_name)
