@@ -1,14 +1,7 @@
-from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
-from flask_login import LoginManager
 import firebase_admin
-from firebase_admin import credentials, firestore, storage
+from firebase_admin import credentials, initialize_app, firestore, storage
 import json
 import os
-
-db = SQLAlchemy()
-migrate = Migrate()
-login_manager = LoginManager()
 
 def init_firebase(app):
     try:

@@ -5,13 +5,10 @@ from logging.handlers import RotatingFileHandler, TimedRotatingFileHandler
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY', 'partituras2024ubu')
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
     UPLOAD_FOLDER = 'C:/Users/tomli/Desktop/gii/TFG_Partituras/Digitalizacion-Partituras/DigitalizacionPartiturasApp/partituras/uploaded_sheets'
     PERMANENT_SESSION_LIFETIME = timedelta(days=1)
-    FIREBASE_CREDENTIALS = os.environ.get('FIREBASE_CREDENTIALS_JSON')
-    # FIREBASE_CREDENTIALS = 'C:/Users/tomli/Desktop/gii/TFG_Partituras/Digitalizacion-Partituras/DigitalizacionPartiturasApp/sheet-transcribe-firebase-adminsdk-stggh-ac484e2751.json'
-    # FIREBASE_CREDENTIALS = '/app/sheet-transcribe-firebase-adminsdk-stggh-ac484e2751.json'
-    FIREBASE_BUCKET_NAME = 'sheet-transcribe.appspot.com'
+    FIREBASE_CREDENTIALS_JSON = os.environ.get('FIREBASE_CREDENTIALS_JSON', '')
+    FIREBASE_BUCKET_NAME = os.environ.get('FIREBASE_BUCKET_NAME', 'sheet-transcribe.appspot.com')
     FIREBASE_CONFIG = {
         "apiKey": "AIzaSyDWnvC205VEIMrRhwqgRavndvfAeiGkGaY",
         "authDomain": "sheet-transcribe.firebaseapp.com",
