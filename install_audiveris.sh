@@ -8,15 +8,15 @@ check_last_command() {
 }
 
 echo "Actualizando y mejorando el sistema..."
-sudo apt update
-check_last_command "sudo apt update"
+apt update
+check_last_command "apt update"
 
-sudo apt upgrade -y
-check_last_command "sudo apt upgrade"
+apt upgrade -y
+check_last_command "apt upgrade"
 
 echo "Instalando dependencias..."
-sudo apt install -y git unzip openjdk-17-jdk
-check_last_command "sudo apt install"
+apt install -y git unzip openjdk-17-jdk
+check_last_command "apt install"
 
 echo "Clonando el repositorio de Audiveris..."
 git clone https://github.com/Audiveris/audiveris.git /app/audiveris/audiveris_repo
