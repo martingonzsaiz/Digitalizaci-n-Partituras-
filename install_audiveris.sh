@@ -3,11 +3,21 @@
 mkdir -p /app/audiveris/bin
 mkdir -p /app/audiveris/lib
 
-curl -L -o /app/audiveris/audiveris.zip https://github.com/Audiveris/audiveris/releases/download/5.3.1/Audiveris-5.3.1.zip
+curl -L -o /app/audiveris/audiveris.zip https://github.com/Audiveris/audiveris/archive/refs/tags/5.3.1.zip
+
+if [ ! -f /app/audiveris/audiveris.zip ]; then
+  echo "Error: No se pudo descargar el archivo ZIP de Audiveris."
+  exit 1
+fi
 
 unzip /app/audiveris/audiveris.zip -d /app/audiveris/
 
-mv /app/audiveris/Audiveris-5.3.1/bin/* /app/audiveris/bin/
-mv /app/audiveris/Audiveris-5.3.1/lib/* /app/audiveris/lib/
+if [ ! -d /app/audiveris/audiveris-5.3.1 ]; then
+  echo "Error: No se pudo descomprimir el archivo ZIP de Audiveris."
+  exit 1
+fi
+
+mv /app/audiveris/audiveris-5.3.1/bin/* /app/audiveris/bin/
+mv /app/audiveris/audiveris-5.3.1/lib/* /app/audiveris/lib/
 
 chmod +x /app/audiveris/bin/run_audiveris.sh
