@@ -1,8 +1,8 @@
-
 DigitalizacionPartiturasApp/sheet-transcribe-firebase-adminsdk-stggh-ac484e2751.json
 DigitalizacionPartiturasApp/verovio/
 DigitalizacionPartiturasApp/hip-transducer-422216-m7-5b7489d00ae2.json
-DigitalizacionPartiturasApp/audiveris/
+DigitalizacionPartiturasApp/audiveris/*
+!DigitalizacionPartiturasApp/audiveris/bin/
 !DigitalizacionPartiturasApp/audiveris/bin/run_audiveris.sh
 DigitalizacionPartiturasApp/audiveris_output/tmpxykrn0zy-20240613T2130.log
 DigitalizacionPartiturasApp/audiveris_output/tmpxykrn0zy.omr
