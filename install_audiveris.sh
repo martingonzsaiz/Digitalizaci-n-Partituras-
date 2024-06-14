@@ -3,7 +3,7 @@
 mkdir -p /app/audiveris/bin
 mkdir -p /app/audiveris/lib
 
-curl -o /app/audiveris/audiveris.zip https://github.com/Audiveris/audiveris/releases/download/5.3.1/Audiveris-5.3.1.zip
+curl -L -o /app/audiveris/audiveris.zip https://github.com/Audiveris/audiveris/releases/download/5.3.1/Audiveris-5.3.1.zip
 
 unzip /app/audiveris/audiveris.zip -d /app/audiveris/
 
