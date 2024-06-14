@@ -15,7 +15,7 @@ sudo apt upgrade -y
 check_last_command "sudo apt upgrade"
 
 echo "Instalando dependencias..."
-sudo apt install -y git unzip
+sudo apt install -y git unzip openjdk-17-jdk
 check_last_command "sudo apt install"
 
 echo "Clonando el repositorio de Audiveris..."
@@ -33,7 +33,7 @@ git pull --all
 check_last_command "git pull --all"
 
 echo "Configurando JAVA_HOME y PATH..."
-export JAVA_HOME=/app/.jdk
+export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
 export PATH=$JAVA_HOME/bin:$PATH
 echo "JAVA_HOME=$JAVA_HOME"
 echo "PATH=$PATH"
