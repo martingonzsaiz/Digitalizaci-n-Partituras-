@@ -114,7 +114,7 @@ def digitalize_sheets(file_path, sheet_music):
     output_dir = '/app/audiveris/output'
     clean_directory(output_dir)
 
-    batch_script = '/app/audiveris/bin/run_audiveris.sh'
+    batch_script = '/app/DigitalizacionPartiturasApp/run_audiveris.sh'
     cmd = [batch_script, file_path]
 
     try:
