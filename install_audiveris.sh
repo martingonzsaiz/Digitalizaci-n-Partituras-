@@ -1,24 +1,20 @@
 #!/bin/bash
 
-mkdir -p /app/audiveris/bin
-mkdir -p /app/audiveris/lib
+mkdir -p /app/audiveris/bin /app/audiveris/lib
 
-curl -L -o /app/audiveris/audiveris.zip https://github.com/Audiveris/audiveris/archive/refs/tags/5.3.1.zip
+git clone https://github.com/Audiveris/audiveris.git /app/audiveris/audiveris_repo
 
-if [ ! -f /app/audiveris/audiveris.zip ]; then
-  echo "Error: No se pudo descargar el archivo ZIP de Audiveris."
-  exit 1
-fi
+cd /app/audiveris/audiveris_repo
 
-unzip /app/audiveris/audiveris.zip -d /app/audiveris/
+git checkout development
+git pull --all
 
-if [ ! -d /app/audiveris/audiveris-5.3.1 ]; then
-  echo "Error: No se pudo descomprimir el archivo ZIP de Audiveris."
-  exit 1
-fi
+./gradlew build
 
-mv /app/audiveris/audiveris-5.3.1/bin/* /app/audiveris/bin/
-mv /app/audiveris/audiveris-5.3.1/lib/* /app/audiveris/lib/
+unzip build/distributions/Audiveris.zip -d /app/audiveris/
+
+mv /app/audiveris/Audiveris/bin/* /app/audiveris/bin/
+mv /app/audiveris/Audiveris/lib/* /app/audiveris/lib/
 
 cp /app/DigitalizacionPartiturasApp/audiveris/bin/run_audiveris.sh /app/audiveris/bin/
 
