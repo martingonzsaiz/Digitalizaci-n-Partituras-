@@ -20,6 +20,6 @@ fi
 mv /app/audiveris/audiveris-5.3.1/bin/* /app/audiveris/bin/
 mv /app/audiveris/audiveris-5.3.1/lib/* /app/audiveris/lib/
 
-cp /app/audiveris/run_audiveris.sh /app/audiveris/bin/
+cp /app/DigitalizacionPartiturasApp/audiveris/bin/run_audiveris.sh /app/audiveris/bin/
 
 chmod +x /app/audiveris/bin/run_audiveris.sh
