@@ -111,16 +111,15 @@ def menu():
     return render_template('menu.html')
 
 def digitalize_sheets(file_path, sheet_music):
-    output_dir = '/app/audiveris/output'
+    output_dir = 'C:/Users/tomli/Desktop/gii/TFG_Partituras/Digitalizacion-Partituras/DigitalizacionPartiturasApp/audiveris_output'
     clean_directory(output_dir)
 
-    batch_script = '/app/DigitalizacionPartiturasApp/run_audiveris.sh'
+    batch_script = os.path.join('C:/Users/tomli/Desktop/gii/TFG_Partituras/Digitalizacion-Partituras/DigitalizacionPartiturasApp/audiveris/build/distributions/Audiveris-5.3.1/bin', 'run_audiveris.bat')
     cmd = [batch_script, file_path]
 
     try:
-        result = subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         current_app.logger.info(f"Digitalización completada para: {file_path}")
-        current_app.logger.info(result.stdout.decode('utf-8'))
 
         log_file = find_log_file(output_dir)
         if log_file is None:
