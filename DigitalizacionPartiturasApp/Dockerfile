@@ -42,4 +42,4 @@ RUN chmod +x /app/run_audiveris.sh
 
 EXPOSE 5000
 
-CMD ["gunicorn", "-b", "0.0.0.0:5000", "--timeout", "300", "app:create_app()"]
+CMD ["gunicorn", "-b", "0.0.0.0:$PORT", "--timeout", "300", "app:create_app()"]
