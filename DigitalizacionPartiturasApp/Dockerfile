@@ -1,47 +1,45 @@
-FROM openjdk:17-jdk-slim-buster
+FROM python:3.11-slim as base
 
-# Instalar dependencias necesarias
-RUN apt-get update && apt-get install -y \
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
-    gradle \
-    tesseract-ocr \
+    curl \
+    build-essential \
     libtesseract-dev \
+    tesseract-ocr \
     libfreetype6-dev \
     ghostscript \
     imagemagick \
-    python3-pip \
-    default-mysql-client \
-    curl && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+    openjdk-17-jdk \
+    dos2unix  # Agregar dos2unix aquí
 
-# Ajustes de configuración de ImageMagick
-RUN sed -i '/disable ghostscript format types/,+6d' /etc/ImageMagick-6/policy.xml
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Instalar Rust para la compilación de bcrypt
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
 ENV PATH="/root/.cargo/bin:${PATH}"
 
-# Instalar Python y librerías necesarias
-RUN pip3 install --upgrade pip && \
-    pip3 install flask google-cloud-storage flask-login flask_sqlalchemy flask_migrate pymysql bcrypt firebase_admin Pyrebase4
+FROM base as audiveris-builder
 
-# Copiar archivos y configuración de Google Cloud
-COPY ./hip-transducer-422216-m7-5b7489d00ae2.json /app/
-COPY . /app
+RUN git clone https://github.com/Audiveris/audiveris.git && \
+    cd audiveris && \
+    ./gradlew build
 
-# Clonar y construir Audiveris en el contenedor
-RUN if [ -d "/app/audiveris" ]; then rm -rf /app/audiveris; fi && \
-    git clone https://github.com/Audiveris/audiveris.git /app/audiveris && \
-    cd /app/audiveris && \
-    ./gradlew build && \
-    ./gradlew run
+FROM base
 
-# Establecer el directorio de trabajo
-WORKDIR /app
+COPY --from=audiveris-builder /app/audiveris /app/audiveris
 
-# Exponer el puerto para Flask
+RUN mkdir /app/audiveris_output
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+COPY run_audiveris.sh /app/run_audiveris.sh
+RUN dos2unix /app/run_audiveris.sh  # Convertir el archivo con dos2unix
+RUN chmod +x /app/run_audiveris.sh
+
 EXPOSE 5000
 
-# Comando para iniciar la aplicación
-CMD ["python3", "run.py"]
+CMD ["gunicorn", "-b", "0.0.0.0:5000", "--timeout", "300", "app:create_app()"]

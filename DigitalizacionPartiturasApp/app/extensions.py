@@ -19,14 +19,16 @@ def load_credentials_from_info(info):
     return credentials, project
 
 def init_firebase(app):
+    firebase_credentials_base64 = os.environ.get('FIREBASE_CREDENTIALS_JSON_BASE64', 'Variable no configurada')
+    print("FIREBASE_CREDENTIALS_JSON_BASE64:", firebase_credentials_base64)
     try:
         firebase_admin.get_app()
     except ValueError:
-        firebase_credentials_base64 = os.environ.get('FIREBASE_CREDENTIALS_JSON', '')
+        firebase_credentials_base64 = os.environ.get('FIREBASE_CREDENTIALS_JSON_BASE64')
         if not firebase_credentials_base64:
-            raise ValueError("La variable de entorno FIREBASE_CREDENTIALS_JSON no está configurada o está vacía.")
+            raise ValueError("FIREBASE_CREDENTIALS_JSON_BASE64 no está configurado.")
         
-        cred_dict = json.loads(base64.b64decode(firebase_credentials_base64).decode('utf-8'))
+        cred_dict = json.loads(base64.b64decode(firebase_credentials_base64))
         
         cred = credentials.Certificate(cred_dict)
         firebase_admin.initialize_app(cred, {

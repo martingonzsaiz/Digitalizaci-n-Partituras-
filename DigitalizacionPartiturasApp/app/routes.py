@@ -1,4 +1,5 @@
 from datetime import timedelta
+from datetime import datetime
 import json
 import shutil
 from flask import Blueprint, get_flashed_messages, render_template, request, redirect, send_from_directory, url_for, flash, session, current_app, send_file, Response
@@ -70,7 +71,6 @@ def logout():
 def register():
     firestore_db = current_app.config.get('firestore_db')
     if not firestore_db:
-        current_app.logger.error("Firestore DB no es accesible.")
         flash('Error de conexión', 'error')
         return render_template('register.html')
 
@@ -111,42 +111,47 @@ def menu():
     return render_template('menu.html')
 
 def digitalize_sheets(file_path, sheet_music):
-    output_dir = 'C:/Users/tomli/Desktop/gii/TFG_Partituras/Digitalizacion-Partituras/DigitalizacionPartiturasApp/audiveris_output'
+    output_dir = '/app/audiveris_output'
     clean_directory(output_dir)
-
-    batch_script = os.path.join('C:/Users/tomli/Desktop/gii/TFG_Partituras/Digitalizacion-Partituras/DigitalizacionPartiturasApp/audiveris/build/distributions/Audiveris-5.3.1/bin', 'run_audiveris.bat')
+    
+    batch_script = '/app/run_audiveris.sh'
     cmd = [batch_script, file_path]
-
+        
     try:
-        subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        current_app.logger.info(f"Digitalización completada para: {file_path}")
+        result = subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        if result.returncode != 0:
+            flash(f"Error durante la digitalización: {result.stderr}", 'error')
+            return None, output_dir
 
         log_file = find_log_file(output_dir)
         if log_file is None:
+            current_app.logger.error("No se encontró el archivo de log en el directorio: {}".format(output_dir))
             flash("No se encontró el archivo de log.", 'error')
             return None, output_dir
 
         is_valid, message = analyze_audiveris_log(log_file)
         if not is_valid:
+            current_app.logger.error(f"Error en log de Audiveris: {message}")
             flash(message, 'error')
             return None, output_dir
 
-        for file in os.listdir(output_dir):
-            if file.endswith('.mxl'):
-                return os.path.join(output_dir, file), output_dir
+        mxl_files = [file for file in os.listdir(output_dir) if file.endswith('.mxl')]
+        current_app.logger.info(f"Archivos MXL encontrados: {mxl_files}")
+        if not mxl_files:
+            flash("Error de digitalización: No se encontró ningún archivo MXL.", 'error')
+            return None, output_dir
 
-        flash("Error de digitalización: No se encontró ningún archivo MXL.", 'error')
-        return None, output_dir
+        return os.path.join(output_dir, mxl_files[0]), output_dir
 
     except subprocess.CalledProcessError as e:
-        flash("Error durante la digitalización: " + e.stderr.decode('utf-8'), 'error')
+        flash(f"Error durante la digitalización: {e.stderr}", 'error')
         return None, output_dir
     except Exception as e:
-        flash("Error al ejecutar Audiveris: " + str(e), 'error')
+        flash(f"Error al ejecutar Audiveris: {str(e)}", 'error')
         return None, output_dir
 
+
 def find_log_file(directory):
-    """Encuentra el archivo de log más reciente en el directorio especificado."""
     log_files = [f for f in os.listdir(directory) if f.endswith('.log')]
     if log_files:
         latest_log = max(log_files, key=lambda x: os.path.getmtime(os.path.join(directory, x)))
@@ -174,8 +179,6 @@ def analyze_audiveris_log(log_file_path):
 
 def allowed_file(filename):
     return filename.lower().endswith(('.pdf', '.png', '.jpg', '.jpeg', '.mxl'))
-
-from datetime import datetime
 
 @main.route('/upload', methods=['GET', 'POST'])
 @login_required
@@ -245,9 +248,9 @@ def download_sheets(bucket_name, file_name):
     current_app.logger.info(f"Descargando archivo desde Firebase: {full_blob_name}")
 
     try:
-        firebase_credentials_base64 = os.environ.get('FIREBASE_CREDENTIALS_JSON', '')
+        firebase_credentials_base64 = os.environ.get('FIREBASE_CREDENTIALS_JSON_BASE64', '')
         if not firebase_credentials_base64:
-            raise ValueError("La variable de entorno FIREBASE_CREDENTIALS_JSON no está configurada o está vacía.")
+            raise ValueError("La variable de entorno FIREBASE_CREDENTIALS_JSON_BASE64 no está configurada o está vacía.")
         
         cred_dict = json.loads(base64.b64decode(firebase_credentials_base64).decode('utf-8'))
         credentials, project = load_credentials_from_info(cred_dict)
@@ -307,7 +310,6 @@ def digitalize_and_view(filename):
                 flash('Partitura digitalizada correctamente.')
                 return redirect(url_for('main.list_digitalized_sheets'))
             except Exception as e:
-                current_app.logger.error(f"Error al subir el archivo digitalizado: {str(e)}")
                 flash('Error al subir el archivo digitalizado.', 'error')
                 return redirect(url_for('main.list_sheet_music'))
         else:
@@ -363,7 +365,7 @@ def view_sheet(filename):
     
     try:
         if not firebase_admin._apps:
-            cred_dict = json.loads(base64.b64decode(current_app.config['FIREBASE_CREDENTIALS_JSON']).decode('utf-8'))
+            cred_dict = json.loads(base64.b64decode(current_app.config['FIREBASE_CREDENTIALS_JSON_BASE64']).decode('utf-8'))
             cred = credentials.Certificate(cred_dict)
             firebase_admin.initialize_app(cred)
         else:
@@ -389,7 +391,6 @@ def view_sheet(filename):
         flash('El archivo solicitado no existe.', 'error')
         return redirect(url_for('main.list_sheet_music'))
     except Exception as e:
-        current_app.logger.error(f"Error al descargar la partitura digitalizada: {str(e)}")
         flash('Error al descargar la partitura digitalizada.', 'error')
         return redirect(url_for('main.list_sheet_music'))
 
@@ -413,7 +414,6 @@ def list_digitalized_sheets():
                 firestore_db.collection('digitalized_sheets').document(sheet.id).delete()
 
     except Exception as e:
-        current_app.logger.error(f"Error al listar las partituras digitalizadas: {str(e)}")
         flash(f"Error al listar las partituras digitalizadas: {str(e)}")
 
     return render_template('list_digitalized_sheets.html', sheet_music_files=sheet_music_files)
@@ -432,7 +432,6 @@ def preprocess_image_for_ocr(file_path, median_kernel_size=5, adaptive_threshold
 @main.route('/preprocess/<path:filename>', methods=['GET'])
 @login_required
 def preprocess(filename):
-    current_app.logger.debug(f"Entrando a la ruta de preprocesamiento directo para el archivo: {filename}")
     median_kernel_size = session.get('median_kernel_size', 5)
     adaptive_threshold_block_size = session.get('adaptive_threshold_block_size', 11)
     adaptive_threshold_c = session.get('adaptive_threshold_c', 2)
@@ -445,40 +444,32 @@ def preprocess(filename):
 
     try:
         processed_file_path = preprocess_image_for_ocr(input_file_path, median_kernel_size, adaptive_threshold_block_size, adaptive_threshold_c)
-        current_app.logger.debug(f"Archivo procesado correctamente: {processed_file_path}")
         return send_file(processed_file_path, as_attachment=True)
     except FileNotFoundError as e:
-        current_app.logger.error(f"No se pudo cargar la imagen desde la ruta: {str(e)}")
         flash('Error al cargar la imagen para el preprocesamiento.', 'error')
         return redirect(url_for('main.list_sheet_music'))
     except Exception as e:
-        current_app.logger.error(f"Error al procesar la imagen: {str(e)}")
         flash('Error al procesar la imagen.', 'error')
         return redirect(url_for('main.list_sheet_music'))
 
 @main.route('/preprocess_form/<path:filename>', methods=['GET', 'POST'])
 @login_required
 def preprocess_form(filename):
-    current_app.logger.debug("Accediendo a la vista del formulario de preprocesamiento.")
     if request.method == 'POST':
         median_kernel_size = int(request.form.get('median_kernel_size', 5))
         adaptive_threshold_block_size = int(request.form.get('adaptive_threshold_block_size', 11))
         adaptive_threshold_c = int(request.form.get('adaptive_threshold_c', 2))
-        current_app.logger.info(f"Parámetros recibidos: MKS={median_kernel_size}, ATBS={adaptive_threshold_block_size}, ATC={adaptive_threshold_c}")
 
         input_file_path = download_sheets(current_app.config['FIREBASE_BUCKET_NAME'], filename)
         if input_file_path:
-            current_app.logger.debug(f"Archivo descargado correctamente para preprocesamiento: {input_file_path}")
             try:
                 processed_file_path = preprocess_image_for_ocr(input_file_path, median_kernel_size, adaptive_threshold_block_size, adaptive_threshold_c)
                 return send_file(processed_file_path, as_attachment=True)
             except Exception as e:
-                current_app.logger.error(f'Error en el preprocesamiento: {str(e)}')
                 flash(f'Error en el preprocesamiento: {str(e)}', 'error')
                 return redirect(request.url)
         else:
             flash('No se pudo descargar el archivo.', 'error')
-            current_app.logger.error("No se pudo descargar el archivo desde Firebase.")
             return render_template('preprocess_form_page.html', filename=filename)
 
     return render_template('preprocess_form_page.html', filename=filename)

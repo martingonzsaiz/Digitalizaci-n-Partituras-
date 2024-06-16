@@ -1,1 +1,0 @@
-web: gunicorn DigitalizacionPartiturasApp.run:app

@@ -5,9 +5,9 @@ from logging.handlers import RotatingFileHandler, TimedRotatingFileHandler
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY', 'partituras2024ubu')
-    UPLOAD_FOLDER = 'C:/Users/tomli/Desktop/gii/TFG_Partituras/Digitalizacion-Partituras/DigitalizacionPartiturasApp/partituras/uploaded_sheets'
+    UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', '/app/partituras/uploaded_sheets')
     PERMANENT_SESSION_LIFETIME = timedelta(days=1)
-    FIREBASE_CREDENTIALS_JSON = os.environ.get('FIREBASE_CREDENTIALS_JSON', '')
+    FIREBASE_CREDENTIALS_JSON_BASE64 = os.environ.get('FIREBASE_CREDENTIALS_JSON_BASE64', '')
     FIREBASE_BUCKET_NAME = os.environ.get('FIREBASE_BUCKET_NAME', 'sheet-transcribe.appspot.com')
     FIREBASE_CONFIG = {
         "apiKey": "AIzaSyDWnvC205VEIMrRhwqgRavndvfAeiGkGaY",
