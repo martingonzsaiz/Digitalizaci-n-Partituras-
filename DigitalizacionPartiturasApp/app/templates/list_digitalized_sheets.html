@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <title>Partituras Digitalizadas</title>
@@ -9,7 +9,7 @@
           background-color: #ffcc00;
           color: black;
       }
-  </style>
+    </style>
 </head>
 <body>
     <div class="container mt-3">
@@ -30,6 +30,9 @@
             {% for sheet in sheet_music_files %}
                 <li class="list-group-item d-flex justify-content-between align-items-center">
                     <a href="{{ sheet.url }}">{{ sheet.name }}</a>
+                    <form action="{{ url_for('main.delete_digitalized_sheet', doc_id=sheet.doc_id) }}" method="POST" style="display: inline;">
+                        <button type="submit" class="btn btn-danger" onclick="return confirm('¿Estás seguro de querer eliminar esta partitura digitalizada?');">Eliminar</button>
+                    </form>
                 </li>
             {% endfor %}
         </ul>

@@ -47,6 +47,8 @@ numpy==1.26.4
 oauth2client==4.1.2
 opencv-python-headless==4.10.0.82
 packaging==24.1
+pdf2image==1.17.0
+pillow==10.3.0
 proto-plus==1.23.0
 protobuf==4.25.3
 pyasn1==0.6.0

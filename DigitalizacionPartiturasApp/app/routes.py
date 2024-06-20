@@ -17,6 +17,7 @@ import bcrypt
 import subprocess
 import os
 import google.api_core.exceptions
+from pdf2image import convert_from_path
 import cv2
 import numpy as np
 import io
@@ -210,32 +211,54 @@ def upload():
 
     return render_template('upload.html')
 
-# @main.route('/delete_sheet/<doc_id>', methods=['POST'])
-# @login_required
-# def delete_sheet(doc_id):
-#     current_app.logger.debug(f"Intentando eliminar la partitura con doc_id: {doc_id}")
-#     try:
-#         doc_ref = current_app.config['firestore_db'].collection('sheet_music').document(doc_id)
-#         doc = doc_ref.get()
-#         if doc.exists:
-#             file_details = doc.to_dict()
-#             file_path = file_details['file_path']
+@main.route('/delete_sheet/<doc_id>', methods=['POST'])
+@login_required
+def delete_sheet(doc_id):
+    try:
+        firestore_db = current_app.config['firestore_db']
+        doc_ref = firestore_db.collection('sheet_music').document(doc_id)
+        doc = doc_ref.get()
+        if doc.exists:
+            file_details = doc.to_dict()
+            file_path = file_details['file_path']
 
-#             bucket = current_app.config['firebase_storage']
-#             blob = bucket.blob(file_path)
-#             blob.delete()
+            blob = current_app.config['firebase_storage'].blob(file_path)
+            blob.delete()
 
-#             doc_ref.delete()
+            doc_ref.delete()
+            flash('Partitura eliminada correctamente.', 'success')
+        else:
+            flash('No se encontró la partitura especificada.', 'error')
+    except Exception as e:
+        current_app.logger.error(f"Error al eliminar la partitura: {str(e)}")
+        flash(f'Error al eliminar la partitura: {str(e)}', 'error')
 
-#             flash('Partitura eliminada correctamente.', 'success')
-#         else:
-#             flash('No se encontró la partitura especificada.', 'error')
+    return redirect(url_for('main.list_sheet_music'))
 
-#     except Exception as e:
-#         current_app.logger.error(f"Error al eliminar la partitura: {str(e)}")
-#         flash(f'Error al eliminar la partitura: {str(e)}', 'error')
+@main.route('/delete_digitalized_sheet/<doc_id>', methods=['POST'])
+@login_required
+def delete_digitalized_sheet(doc_id):
+    try:
+        firestore_db = current_app.config['firestore_db']
+        doc_ref = firestore_db.collection('digitalized_sheets').document(doc_id)
+        doc = doc_ref.get()
+        if doc.exists:
+            file_details = doc.to_dict()
+            file_path = file_details['path']
 
-#     return redirect(url_for('main.list_sheet_music'))
+            blob = current_app.config['firebase_storage'].blob(file_path)
+            blob.delete()
+
+            doc_ref.delete()
+            flash('Partitura digitalizada eliminada correctamente.', 'success')
+        else:
+            flash('No se encontró la partitura digitalizada especificada.', 'error')
+    except Exception as e:
+        current_app.logger.error(f"Error al eliminar la partitura digitalizada: {str(e)}")
+        flash(f'Error al eliminar la partitura digitalizada: {str(e)}', 'error')
+
+    return redirect(url_for('main.list_digitalized_sheets'))
+
 
 def download_sheets(bucket_name, file_name):
     filename_only = file_name.split('/')[-1]
@@ -348,13 +371,19 @@ def list_sheet_music():
                     file_name = os.path.basename(blob.name)
                     file_type_folder = file_extension if file_extension in ['pdf', 'jpg', 'png', 'jpeg'] else 'images'
                     download_url = url_for('main.digitalize_and_view', filename=f"{file_type_folder}/{file_name}")
-                    sheet_music_files.append({'name': file_name, 'url': download_url})
+                    
+                    firestore_db = current_app.config['firestore_db']
+                    doc_ref = firestore_db.collection('sheet_music').document(file_name)
+                    doc_id = doc_ref.id
+
+                    sheet_music_files.append({'name': file_name, 'url': download_url, 'doc_id': doc_id})
         
     except Exception as e:
         current_app.logger.error(f"Error al listar las partituras: {str(e)}")
         flash(f"Error al listar las partituras: {str(e)}")
 
     return render_template('list_sheet_music.html', sheet_music_files=sheet_music_files)
+
 
 @main.route('/view_sheet/<filename>', methods=['GET'])
 @login_required
@@ -409,7 +438,8 @@ def list_digitalized_sheets():
 
             blob = bucket.blob(full_blob_name)
             if blob.exists():
-                sheet_music_files.append({'name': sheet_data['filename'], 'url': url_for('main.view_sheet', filename=sheet_data['filename'])})
+                doc_id = sheet.id
+                sheet_music_files.append({'name': sheet_data['filename'], 'url': url_for('main.view_sheet', filename=sheet_data['filename']), 'doc_id': doc_id})
             else:
                 firestore_db.collection('digitalized_sheets').document(sheet.id).delete()
 
@@ -418,61 +448,49 @@ def list_digitalized_sheets():
 
     return render_template('list_digitalized_sheets.html', sheet_music_files=sheet_music_files)
 
-def preprocess_image_for_ocr(file_path, median_kernel_size=5, adaptive_threshold_block_size=11, adaptive_threshold_c=2):
-    img = cv2.imread(file_path, cv2.IMREAD_GRAYSCALE)
-    if img is None:
-        raise FileNotFoundError(f"No se pudo cargar la imagen desde la ruta: {file_path}")
+def preprocess_image(file_path, median_kernel_size=5, adaptive_threshold_block_size=11, adaptive_threshold_c=2):
+    if file_path.lower().endswith('.pdf'):
+        images = convert_from_path(file_path)
+        if not images:
+            raise FileNotFoundError("No se pudieron convertir las páginas del PDF a imágenes.")
+        image = images[0]
+        img = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2GRAY)
+    else:
+        img = cv2.imread(file_path, cv2.IMREAD_GRAYSCALE)
+        if img is None:
+            raise FileNotFoundError(f"No se pudo cargar la imagen desde la ruta: {file_path}")
     
     img = cv2.medianBlur(img, median_kernel_size)
     img = cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, adaptive_threshold_block_size, adaptive_threshold_c)
-    processed_file_path = file_path.replace(".png", "_processed.png")
+    processed_file_path = file_path.replace(".png", "_processed.png").replace(".pdf", "_processed.png")
     cv2.imwrite(processed_file_path, img)
     return processed_file_path
 
-@main.route('/preprocess/<path:filename>', methods=['GET'])
+@main.route('/preprocess/<path:filename>', methods=['GET', 'POST'])
 @login_required
 def preprocess(filename):
-    median_kernel_size = session.get('median_kernel_size', 5)
-    adaptive_threshold_block_size = session.get('adaptive_threshold_block_size', 11)
-    adaptive_threshold_c = session.get('adaptive_threshold_c', 2)
-
-    input_file_path = download_sheets(current_app.config['FIREBASE_BUCKET_NAME'], filename)
-    if input_file_path is None:
-        flash('No se pudo descargar el archivo para el preprocesamiento.', 'error')
-        current_app.logger.error("Archivo no encontrado en Firebase.")
-        return redirect(url_for('main.list_sheet_music'))
-
-    try:
-        processed_file_path = preprocess_image_for_ocr(input_file_path, median_kernel_size, adaptive_threshold_block_size, adaptive_threshold_c)
-        return send_file(processed_file_path, as_attachment=True)
-    except FileNotFoundError as e:
-        flash('Error al cargar la imagen para el preprocesamiento.', 'error')
-        return redirect(url_for('main.list_sheet_music'))
-    except Exception as e:
-        flash('Error al procesar la imagen.', 'error')
-        return redirect(url_for('main.list_sheet_music'))
-
-@main.route('/preprocess_form/<path:filename>', methods=['GET', 'POST'])
-@login_required
-def preprocess_form(filename):
     if request.method == 'POST':
-        median_kernel_size = int(request.form.get('median_kernel_size', 5))
-        adaptive_threshold_block_size = int(request.form.get('adaptive_threshold_block_size', 11))
-        adaptive_threshold_c = int(request.form.get('adaptive_threshold_c', 2))
+        median_kernel_size = request.form.get('median_kernel_size', 5, type=int)
+        adaptive_threshold_block_size = request.form.get('adaptive_threshold_block_size', 11, type=int)
+        adaptive_threshold_c = request.form.get('adaptive_threshold_c', 2, type=int)
 
         input_file_path = download_sheets(current_app.config['FIREBASE_BUCKET_NAME'], filename)
-        if input_file_path:
-            try:
-                processed_file_path = preprocess_image_for_ocr(input_file_path, median_kernel_size, adaptive_threshold_block_size, adaptive_threshold_c)
-                return send_file(processed_file_path, as_attachment=True)
-            except Exception as e:
-                flash(f'Error en el preprocesamiento: {str(e)}', 'error')
-                return redirect(request.url)
-        else:
-            flash('No se pudo descargar el archivo.', 'error')
-            return render_template('preprocess_form_page.html', filename=filename)
+        if input_file_path is None:
+            flash('No se pudo descargar el archivo para el preprocesamiento.', 'error')
+            current_app.logger.error("Archivo no encontrado en Firebase.")
+            return redirect(url_for('main.list_sheet_music'))
 
-    return render_template('preprocess_form_page.html', filename=filename)
+        try:
+            processed_file_path = preprocess_image(input_file_path, median_kernel_size, adaptive_threshold_block_size, adaptive_threshold_c)
+            return send_file(processed_file_path, as_attachment=True)
+        except FileNotFoundError as e:
+            flash('Error al cargar la imagen para el preprocesamiento.', 'error')
+            return redirect(url_for('main.list_sheet_music'))
+        except Exception as e:
+            flash('Error al procesar la imagen.', 'error')
+            return redirect(url_for('main.list_sheet_music'))
+    else:
+        return render_template('preprocess_form_page.html', filename=filename)
 
 def configure_routes(app):
     app.register_blueprint(main)

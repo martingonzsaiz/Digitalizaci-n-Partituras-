@@ -49,11 +49,15 @@
                     {{ sheet.name }}
                     <div>
                         <a href="{{ url_for('main.digitalize_and_view', filename=sheet.name) }}" class="btn btn-success">Digitalizar</a>
-                        <a href="{{ url_for('main.preprocess_form', filename=sheet.name) }}" class="btn btn-warning">Preprocesamiento</a>
+                        <a href="{{ url_for('main.preprocess', filename=sheet.name) }}" class="btn btn-warning">Preprocesamiento</a>
+                        <form action="{{ url_for('main.delete_sheet', doc_id=sheet.doc_id) }}" method="POST" style="display: inline;">
+                            <button type="submit" class="btn btn-danger" onclick="return confirm('¿Estás seguro de querer eliminar esta partitura?');">Eliminar</button>
+                        </form>
                     </div>
                 </li>
             {% endfor %}
         </ul>
+        
         <a href="{{ url_for('main.menu') }}" class="btn btn-primary mt-4">Volver al Menú</a>
     </div>
 

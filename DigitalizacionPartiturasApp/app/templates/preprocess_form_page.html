@@ -8,7 +8,18 @@
 <body>
     <div class="container mt-5">
         <h1>Preprocesamiento de Partitura</h1>
-        <form action="{{ url_for('main.preprocess_form', filename=filename) }}" method="post">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form action="{{ url_for('main.preprocess', filename=filename) }}" method="post">
             <div class="mb-3">
                 <label for="median_kernel_size" class="form-label">Tamaño del Kernel Mediano:</label>
                 <input type="number" id="median_kernel_size" name="median_kernel_size" value="5" min="1" step="2" class="form-control" required>
