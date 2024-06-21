@@ -449,45 +449,53 @@ def list_digitalized_sheets():
     return render_template('list_digitalized_sheets.html', sheet_music_files=sheet_music_files)
 
 def preprocess_image(file_path, median_kernel_size=5, adaptive_threshold_block_size=11, adaptive_threshold_c=2):
-    if file_path.lower().endswith('.pdf'):
-        images = convert_from_path(file_path)
-        if not images:
-            raise FileNotFoundError("No se pudieron convertir las páginas del PDF a imágenes.")
-        image = images[0]
-        img = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2GRAY)
-    else:
-        img = cv2.imread(file_path, cv2.IMREAD_GRAYSCALE)
-        if img is None:
-            raise FileNotFoundError(f"No se pudo cargar la imagen desde la ruta: {file_path}")
-    
-    img = cv2.medianBlur(img, median_kernel_size)
-    img = cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, adaptive_threshold_block_size, adaptive_threshold_c)
-    processed_file_path = file_path.replace(".png", "_processed.png").replace(".pdf", "_processed.png")
-    cv2.imwrite(processed_file_path, img)
-    return processed_file_path
+    try:
+        if file_path.lower().endswith('.pdf'):
+            images = convert_from_path(file_path)
+            if not images:
+                raise FileNotFoundError("No se pudieron convertir las páginas del PDF a imágenes.")
+            image = images[0]
+            img = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2GRAY)
+        else:
+            img = cv2.imread(file_path, cv2.IMREAD_GRAYSCALE)
+            if img is None:
+                raise FileNotFoundError(f"No se pudo cargar la imagen desde la ruta: {file_path}")
+        
+        img = cv2.medianBlur(img, median_kernel_size)
+        img = cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, adaptive_threshold_block_size, adaptive_threshold_c)
+        
+        processed_file_path = file_path.replace(".png", "_processed.png").replace(".pdf", "_processed.png").replace(".jpg", "_processed.jpg").replace(".jpeg", "_processed.jpeg")
+        cv2.imwrite(processed_file_path, img)
+        return processed_file_path
+    except Exception as e:
+        raise e
+
 
 @main.route('/preprocess/<path:filename>', methods=['GET', 'POST'])
 @login_required
 def preprocess(filename):
     if request.method == 'POST':
-        median_kernel_size = request.form.get('median_kernel_size', 5, type=int)
-        adaptive_threshold_block_size = request.form.get('adaptive_threshold_block_size', 11, type=int)
-        adaptive_threshold_c = request.form.get('adaptive_threshold_c', 2, type=int)
-
-        input_file_path = download_sheets(current_app.config['FIREBASE_BUCKET_NAME'], filename)
-        if input_file_path is None:
-            flash('No se pudo descargar el archivo para el preprocesamiento.', 'error')
-            current_app.logger.error("Archivo no encontrado en Firebase.")
-            return redirect(url_for('main.list_sheet_music'))
-
         try:
+            median_kernel_size = request.form.get('median_kernel_size', 5, type=int)
+            adaptive_threshold_block_size = request.form.get('adaptive_threshold_block_size', 11, type=int)
+            adaptive_threshold_c = request.form.get('adaptive_threshold_c', 2, type=int)
+
+            input_file_path = download_sheets(current_app.config['FIREBASE_BUCKET_NAME'], filename)
+            if input_file_path is None:
+                flash('No se pudo descargar el archivo para el preprocesamiento.', 'error')
+                current_app.logger.error("Archivo no encontrado en Firebase.")
+                return redirect(url_for('main.list_sheet_music'))
+
             processed_file_path = preprocess_image(input_file_path, median_kernel_size, adaptive_threshold_block_size, adaptive_threshold_c)
+            
             return send_file(processed_file_path, as_attachment=True)
         except FileNotFoundError as e:
             flash('Error al cargar la imagen para el preprocesamiento.', 'error')
+            current_app.logger.error(f'FileNotFoundError: {e}')
             return redirect(url_for('main.list_sheet_music'))
         except Exception as e:
             flash('Error al procesar la imagen.', 'error')
+            current_app.logger.error(f'Exception: {e}')
             return redirect(url_for('main.list_sheet_music'))
     else:
         return render_template('preprocess_form_page.html', filename=filename)
