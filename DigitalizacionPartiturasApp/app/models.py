@@ -7,15 +7,6 @@ class User(UserMixin):
         self.id = username
         self.email = email
         self.passwordHash = passwordHash
-        
-    def is_active(self):
-        return True
-
-    def is_authenticated(self):
-        return True
-
-    def is_anonymous(self):
-        return False
 
 class SheetMusic:
     def __init__(self, title, file_path, upload_date=None):

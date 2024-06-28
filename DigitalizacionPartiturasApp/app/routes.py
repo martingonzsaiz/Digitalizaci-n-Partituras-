@@ -179,7 +179,7 @@ def analyze_audiveris_log(log_file_path):
         return False, f"Error al leer el archivo de log: {str(e)}"
 
 def allowed_file(filename):
-    return filename.lower().endswith(('.pdf', '.png', '.jpg', '.jpeg', '.mxl'))
+    return filename.lower().endswith(('.pdf', '.png', '.jpg', '.jpeg'))
 
 @main.route('/upload', methods=['GET', 'POST'])
 @login_required
@@ -448,7 +448,7 @@ def list_digitalized_sheets():
 
     return render_template('list_digitalized_sheets.html', sheet_music_files=sheet_music_files)
 
-def preprocess_image(file_path, median_kernel_size=5, adaptive_threshold_block_size=11, adaptive_threshold_c=2):
+def preprocess_image(file_path, median_kernel_size, adaptive_threshold_block_size, adaptive_threshold_c, erosion_iterations, dilation_iterations):
     try:
         if file_path.lower().endswith('.pdf'):
             images = convert_from_path(file_path)
@@ -463,13 +463,17 @@ def preprocess_image(file_path, median_kernel_size=5, adaptive_threshold_block_s
         
         img = cv2.medianBlur(img, median_kernel_size)
         img = cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, adaptive_threshold_block_size, adaptive_threshold_c)
+
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+        
+        img = cv2.erode(img, kernel, iterations=erosion_iterations)
+        img = cv2.dilate(img, kernel, iterations=dilation_iterations)
         
         processed_file_path = file_path.replace(".png", "_processed.png").replace(".pdf", "_processed.png").replace(".jpg", "_processed.jpg").replace(".jpeg", "_processed.jpeg")
         cv2.imwrite(processed_file_path, img)
         return processed_file_path
     except Exception as e:
         raise e
-
 
 @main.route('/preprocess/<path:filename>', methods=['GET', 'POST'])
 @login_required
@@ -479,6 +483,8 @@ def preprocess(filename):
             median_kernel_size = request.form.get('median_kernel_size', 5, type=int)
             adaptive_threshold_block_size = request.form.get('adaptive_threshold_block_size', 11, type=int)
             adaptive_threshold_c = request.form.get('adaptive_threshold_c', 2, type=int)
+            erosion_iterations = request.form.get('erosion_iterations', 1, type=int)
+            dilation_iterations = request.form.get('dilation_iterations', 1, type=int)
 
             input_file_path = download_sheets(current_app.config['FIREBASE_BUCKET_NAME'], filename)
             if input_file_path is None:
@@ -486,7 +492,7 @@ def preprocess(filename):
                 current_app.logger.error("Archivo no encontrado en Firebase.")
                 return redirect(url_for('main.list_sheet_music'))
 
-            processed_file_path = preprocess_image(input_file_path, median_kernel_size, adaptive_threshold_block_size, adaptive_threshold_c)
+            processed_file_path = preprocess_image(input_file_path, median_kernel_size, adaptive_threshold_block_size, adaptive_threshold_c, erosion_iterations, dilation_iterations)
             
             return send_file(processed_file_path, as_attachment=True)
         except FileNotFoundError as e:

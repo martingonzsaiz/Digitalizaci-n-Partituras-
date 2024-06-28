@@ -1,7 +1,7 @@
 import os
 from datetime import timedelta
 import logging
-from logging.handlers import RotatingFileHandler, TimedRotatingFileHandler
+from logging.handlers import TimedRotatingFileHandler
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY', 'partituras2024ubu')
