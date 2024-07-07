@@ -20,13 +20,13 @@ echo "Verificando acceso al archivo de entrada..."
 if [ -r "$INPUT_FILE" ]; then
     echo "El archivo de entrada es legible"
 else
-    echo "El archivo de entrada NO es legible"
+    echo "El archivo de entrada no es legible"
     ls -l "$INPUT_FILE"
     exit 1
 fi
 
 mkdir -p "$OUTPUT_DIR"
-echo "Directorio de salida asegurado (creado si no existía)"
+echo "Directorio de salida creado"
 
 echo "Ejecutando Audiveris..."
 $JAVA_EXE -cp "$CLASSPATH" org.audiveris.omr.Main -batch -export -output "$OUTPUT_DIR" -- "$INPUT_FILE" &> "${OUTPUT_DIR}/audiveris.log"

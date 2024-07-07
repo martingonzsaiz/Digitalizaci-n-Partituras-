@@ -1,64 +1,7 @@
-2024-05-15 18:59:35,885 ERROR: Error durante la digitalización: Error: Could not find or load main class org.audiveris.Main
-Caused by: java.lang.ClassNotFoundException: org.audiveris.Main
- [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\app\routes.py:88]
-2024-05-15 19:01:17,404 ERROR: Error durante la digitalización: Error: Could not find or load main class org.audiveris.Main
-Caused by: java.lang.ClassNotFoundException: org.audiveris.Main
- [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\app\routes.py:88]
-2024-05-15 19:14:08,221 ERROR: Error durante la digitalización: Error: Could not find or load main class org.audiveris.Main
-Caused by: java.lang.ClassNotFoundException: org.audiveris.Main
- [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\app\routes.py:88]
-2024-05-15 19:14:27,735 ERROR: Error durante la digitalización: Error: Could not find or load main class org.audiveris.Main
-Caused by: java.lang.ClassNotFoundException: org.audiveris.Main
- [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\app\routes.py:88]
-2024-05-15 19:16:59,651 ERROR: Error durante la digitalización: Error: Could not find or load main class org.audiveris.Main
-Caused by: java.lang.ClassNotFoundException: org.audiveris.Main
- [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\app\routes.py:88]
-2024-05-15 19:17:38,157 ERROR: Error durante la digitalización: Error: Could not find or load main class org.audiveris.Main
-Caused by: java.lang.ClassNotFoundException: org.audiveris.Main
- [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\app\routes.py:88]
-2024-05-15 19:19:53,300 ERROR: Error durante la digitalización: Error: Could not find or load main class org.audiveris.Main
-Caused by: java.lang.ClassNotFoundException: org.audiveris.Main
- [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\app\routes.py:88]
-2024-05-15 19:55:41,929 ERROR: Error durante la digitalización: Error: Could not find or load main class org.audiveris.Main
-Caused by: java.lang.ClassNotFoundException: org.audiveris.Main
- [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\app\routes.py:88]
-2024-05-15 20:01:38,171 ERROR: Error durante la digitalización: Error: Could not find or load main class org.audiveris.Main
-Caused by: java.lang.ClassNotFoundException: org.audiveris.Main
- [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\app\routes.py:88]
-2024-05-15 20:10:53,123 ERROR: Error durante la digitalización: Error: Could not find or load main class org.audiveris.Main
-Caused by: java.lang.ClassNotFoundException: org.audiveris.Main
- [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\app\routes.py:88]
-2024-05-15 20:11:45,453 ERROR: Error durante la digitalización: Error: Could not find or load main class org.audiveris.Main
-Caused by: java.lang.ClassNotFoundException: org.audiveris.Main
- [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\app\routes.py:88]
-2024-05-15 20:20:19,264 ERROR: Error durante la digitalización: Error: Could not find or load main class org.audiveris.Main
-Caused by: java.lang.ClassNotFoundException: org.audiveris.Main
- [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\app\routes.py:88]
-2024-05-15 20:20:58,049 ERROR: Error durante la digitalización: Error: Could not find or load main class org.audiveris.Main
-Caused by: java.lang.ClassNotFoundException: org.audiveris.Main
- [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\app\routes.py:88]
-2024-05-15 20:30:13,604 ERROR: Error durante la digitalización: Error: Could not find or load main class org.audiveris.Main
-Caused by: java.lang.ClassNotFoundException: org.audiveris.Main
- [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\app\routes.py:88]
-2024-05-15 20:31:28,881 ERROR: Error durante la digitalización: Error: Could not find or load main class org.audiveris.Main
-Caused by: java.lang.ClassNotFoundException: org.audiveris.Main
- [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\app\routes.py:88]
-2024-05-15 21:20:02,202 ERROR: Error durante la digitalización: Error: Could not find or load main class org.audiveris.Main
-Caused by: java.lang.ClassNotFoundException: org.audiveris.Main
- [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\app\routes.py:88]
-2024-06-13 21:29:19,520 INFO: Logging is set up. [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\config.py:42]
-2024-06-13 21:29:20,772 INFO: Logging is set up. [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\config.py:42]
-2024-06-13 21:29:38,951 INFO: Logging is set up. [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\config.py:42]
-2024-06-13 21:29:40,720 INFO: Logging is set up. [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\config.py:42]
-2024-06-13 21:30:24,191 INFO: Fichero en digitalize_and_view: 8.png [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\app\routes.py:270]
-2024-06-13 21:30:24,191 INFO: Descargando archivo desde Firebase: partituras/user_martin/png/8.png [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\app\routes.py:244]
-2024-06-13 21:30:25,197 INFO: Archivo descargado: C:\Users\tomli\AppData\Local\Temp\tmpxykrn0zy.png [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\app\routes.py:254]
-2024-06-13 21:30:25,197 INFO: Directorio limpiado completamente [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\app\routes.py:321]
-2024-06-13 21:30:26,743 INFO: Digitalización completada para: C:\Users\tomli\AppData\Local\Temp\tmpxykrn0zy.png [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\app\routes.py:121]
-2024-06-13 21:34:12,777 INFO: Logging is set up. [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\config.py:42]
-2024-06-13 21:34:13,992 INFO: Logging is set up. [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\config.py:42]
-2024-06-13 21:36:01,030 INFO: Logging is set up. [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\config.py:42]
-2024-06-13 21:43:24,555 INFO: Logging is set up. [in c:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\config.py:42]
-2024-06-13 21:43:25,844 INFO: Logging is set up. [in c:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\config.py:42]
-2024-06-13 21:43:40,600 INFO: Logging is set up. [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\config.py:42]
-2024-06-13 21:43:42,022 INFO: Logging is set up. [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\config.py:42]
+2024-07-06 14:25:23,256 INFO: Logging is set up. [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\config.py:62]
+2024-07-06 14:25:25,622 INFO: Logging is set up. [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\config.py:62]
+2024-07-06 14:26:23,585 INFO: Descargando archivo desde Firebase: partituras/user_martin/pdf/canon.pdf [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\app\routes.py:348]
+2024-07-06 14:26:24,527 INFO: Archivo descargado: C:\Users\tomli\AppData\Local\Temp\tmp6vjzbupn.pdf [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\app\routes.py:368]
+2024-07-06 14:28:15,530 INFO: Logging is set up. [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\config.py:62]
+2024-07-06 14:28:17,537 INFO: Logging is set up. [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\config.py:62]
+2024-07-06 14:34:58,945 INFO: Logging is set up. [in C:\Users\tomli\Desktop\gii\TFG_Partituras\Digitalizacion-Partituras\DigitalizacionPartiturasApp\config.py:62]
