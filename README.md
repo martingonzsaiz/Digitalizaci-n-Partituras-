@@ -19,6 +19,7 @@ Este proyecto busca proporcionar una plataforma web accesible y fácil de usar q
 - **Visualización de partituras**: Uso de la librería Verovio para visualizar partituras digitalizadas.
 - **Obtención de metadatos**: Automatización en la obtención de metadatos de partituras.
 
+## Instalación y preparación del entorno
 En primer lugar, sería necesario clonar el repositorio. Para ello hay que realizar el comando siguiente en la terminal CMD o en el PowerShell:
 git clone https://github.com/martingonzsaiz/Digitalizacion-Partituras.git
 Luego sería necesario moverse al directorio en cuestión para seguir con las siguientes instrucciones.
@@ -59,7 +60,7 @@ Y acceder a ella a través del navegador con http://127.0.0.1:5000, pudiendo int
 
 ## Construcción del Docker
 Para la construcción del Docker habría que revisar y actualizar todas las nuevas dependencias que tiene la aplicación tras un desarrollo de una nueva funcionalidad para la aplicación. Todas estas nuevas dependencias se deberían añadir en la sección del Docker referente al RUN:
-RUN apt-get update && apt-get install -y --no-install-recommends \
+"RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     curl \
     build-essential \
@@ -71,7 +72,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     openjdk-17-jdk \
     dos2unix \
     poppler-utils && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+    apt-get clean && rm -rf /var/lib/apt/lists/*"
 Tambien sería necesario añadir todas las nuevas variables de entorno que se requieran y realizar cambios en la imagen si se han añadido archivos o se han modificado antiguos.
 Finalmente, se podría construir el Docker y subir la imagen. Para ello hay que usar el siguiente comando:
 docker build -t melodymatrix .
@@ -93,11 +94,11 @@ En caso de que haya cualquier fallo o si se quiere revisar el flujo de la aplica
 heroku logs --tail -a melodymatrix
 
 ## Tecnologías Utilizadas
-Backend: Flask, Python
-Frontend: Bootstrap y CSS
-Almacenamiento: Firebase
-OMR: Audiveris
-Contenedores: Docker
-Despliegue: Heroku
-Control de Versiones: GitHub
-Gestión del proyecto: Trello
+- **Backend**: Flask, Python
+- **Frontend**: Bootstrap y CSS
+- **Almacenamiento**: Firebase
+- **OMR**: Audiveris
+- **Contenedores**: Docker
+- **Despliegue**: Heroku
+- **Control de Versiones**: GitHub
+- **Gestión del proyecto**: Trello
