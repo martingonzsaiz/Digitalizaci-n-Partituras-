@@ -19,7 +19,7 @@ Este proyecto busca proporcionar una plataforma web accesible y fácil de usar q
 - **Visualización de partituras**: Uso de la librería Verovio para visualizar partituras digitalizadas.
 - **Obtención de metadatos**: Automatización en la obtención de metadatos de partituras.
 
-En primer lugar, sería necesario acceder al repositorio del proyecto para clonarlo https://github.com/martingonzsaiz/Digitalizacion-Partituras. Para ello hay que realizar el comando siguiente en la terminal CMD o en el PowerShell:
+En primer lugar, sería necesario clonar el repositorio. Para ello hay que realizar el comando siguiente en la terminal CMD o en el PowerShell:
 git clone https://github.com/martingonzsaiz/Digitalizacion-Partituras.git
 Luego sería necesario moverse al directorio en cuestión para seguir con las siguientes instrucciones.
 cd Digitalizacion-Partituras
@@ -36,7 +36,7 @@ A continuación, es necesario tener claros ciertos aspectos de la aplicación. E
 Las credenciales de Firebase sirven para que la aplicación se autentique y pueda acceder a los servicios de Firebase. En el caso de esta aplicación se hace uso de Firestore y Firebase Storage, por ello es necesario generar estas claves y definirlas como variables. Para ello habría que seguir unos pasos extra:
 
 ## En Firebase Storage:
-1.	Ir a Firebase Console (9) 
+1.	Ir a Firebase Console.
 2.	Crear o seleccionar el proyecto.
 3.	Ir a Configuración del proyecto > Cuentas de servicio.
 4.	Seleccionar “Generar nueva clave privada” y guardar el archivo JSON generado.
