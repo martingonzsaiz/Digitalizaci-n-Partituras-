@@ -19,6 +19,18 @@ Este proyecto busca proporcionar una plataforma web accesible y fácil de usar q
 - **Visualización de partituras**: Uso de la librería Verovio para visualizar partituras digitalizadas.
 - **Obtención de metadatos**: Automatización en la obtención de metadatos de partituras.
 
+## Uso rápido con Docker
+Para probar la aplicación de manera rápida es posible usar la imagen Docker subida en Docker Hub. 
+1. Primero es necesario descargar la imagen:
+docker pull martingonzsaiz/melodymatrix:latest
+2. Luego es necesario configurar las variables de entorno. Se puede ejecutar la imagen pasando las credenciales como parametros del comando.
+docker run -p 5000:5000 \
+-e FIREBASE_CREDENTIALS_JSON_BASE64=<credencial_firebase_codificada> \
+-e FIREBASE_BUCKET_NAME=<nombre_bucket> \
+martingonzsaiz/melodymatrix:latest
+3. Finalmente se podría iniciar el contenedor.
+http://localhost:5000 
+
 ## Instalación y preparación del entorno
 En primer lugar, sería necesario clonar el repositorio. Para ello hay que realizar el comando siguiente en la terminal CMD o en el PowerShell:
 git clone https://github.com/martingonzsaiz/Digitalizacion-Partituras.git
