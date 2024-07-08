@@ -79,7 +79,6 @@ def logout():
     session.clear()
     return redirect(url_for('main.home'))
 
-# Ruta para el registro de usuarios
 @main.route('/register', methods=['GET', 'POST'])
 def register():
     # Obtención de la base de datos de Firestore
@@ -103,11 +102,18 @@ def register():
             flash('Las contraseñas no coinciden.', 'error')
             return render_template('register.html')
 
+        # Comprobación de si el correo electrónico ya está en uso
+        users_ref = firestore_db.collection('users')
+        existing_email_query = [doc for doc in users_ref.where('email', '==', email).stream()]
+        if existing_email_query:
+            flash('Este correo electrónico ya está registrado.', 'error')
+            return render_template('register.html')
+
         # Referencia al documento del usuario
         user_ref = firestore_db.collection('users').document(username)
         user_snapshot = user_ref.get()
         
-        # Verifica si el documento del usuario ya existe
+        # Comprobación de si el documento del usuario ya existe
         if user_snapshot.exists:
             flash('El nombre de usuario ya existe.', 'error')
             return render_template('register.html')
@@ -220,7 +226,14 @@ def analyze_audiveris_log(log_file_path):
 
 # Función de formatos de partituras permitidos
 def allowed_file(filename):
-    return filename.lower().endswith(('.pdf', '.png', '.jpg', '.jpeg'))
+    return filename.lower().endswith(('.pdf', '.png', '.jpg', '.jpeg','.mxl'))
+
+# Comprobación de la autorización del usuario
+def is_user_authorized(file_path):
+    firestore_db = current_app.config['firestore_db']
+    user_id = current_user.get_id()
+    query_result = firestore_db.collection('sheet_music').where('file_path', '==', file_path).where('username', '==', user_id).get()
+    return len(query_result) > 0
 
 # Ruta para subir una partitura
 # Requiere haber iniciado sesión
@@ -244,38 +257,32 @@ def upload():
             # Definición de las carpetas en función del usuario
             user_folder = f'user_{current_user.get_id()}/'
             
-            # Definición de las carpetas en función del formato
-            file_type_folder = extension.replace('.', '') + '/'
-            
-            # Ruta completa en Firebase Storage
+            # Determinación el directorio correcto
+            if extension == '.mxl':
+                file_type_folder = 'mxl/'
+                collection_name = 'digitalized_sheets'
+            elif extension in ['.pdf', '.png', '.jpg', '.jpeg']:
+                file_type_folder = extension.replace('.', '') + '/'
+                collection_name = 'sheet_music'
+            else:
+                file_type_folder = 'others/'
+                collection_name = 'sheet_music'
+
             full_path = f'partituras/{user_folder}{file_type_folder}{filename}'
 
-            # Verificar si ya existe una partitura con el mismo nombre para el usuario actual
-            firestore_db = current_app.config['firestore_db']
-            sheet_music_ref = firestore_db.collection('sheet_music')
-            existing_sheet = sheet_music_ref.where('file_path', '==', full_path).stream()
-            
-            if any(existing_sheet):
-                flash('Ya existe una partitura con ese nombre. Por favor, elija un nombre diferente.', 'error')
-                return render_template('upload.html')
-
-            # Objeto blob de Firebase Storage y subida del archivo a Firebase Storage
+            # Subir archivo y registro en Firestore
             blob = current_app.config['firebase_storage'].blob(full_path)
             blob.upload_from_file(file.stream, content_type=file.content_type)
 
-            # Objeto SheetMusic con el título, la ruta del archivo y la fecha de subida
-            sheet_music = SheetMusic(title=title, file_path=full_path, upload_date=datetime.now())
-
-            # Registro de la partitura en Firestore
-            firestore_db.collection('sheet_music').document(filename).set({
-                'title': sheet_music.title,
-                'file_path': sheet_music.file_path,
-                'upload_date': sheet_music.upload_date.isoformat()
+            firestore_db = current_app.config['firestore_db']
+            firestore_db.collection(collection_name).document(filename).set({
+                'title': title,
+                'file_path': full_path,
+                'upload_date': datetime.now(),
+                'username': current_user.get_id()
             })
-
             flash('Partitura subida correctamente.')
             return redirect(url_for('main.menu'))
-
     return render_template('upload.html')
 
 # Ruta para eliminar una partitura
@@ -289,7 +296,7 @@ def delete_sheet(doc_id):
         doc_ref = firestore_db.collection('sheet_music').document(doc_id)
         # Documento de Firestore
         doc = doc_ref.get()
-        if doc.exists:
+        if doc.exists and doc.to_dict()['username'] == current_user.get_id():
             file_details = doc.to_dict()
             file_path = file_details['file_path']
 
@@ -301,7 +308,7 @@ def delete_sheet(doc_id):
             doc_ref.delete()
             flash('Partitura eliminada correctamente.', 'success')
         else:
-            flash('No se encontró la partitura especificada.', 'error')
+            flash('No autorizado para eliminar esta partitura o partitura inexsitente.', 'error')
     # Excepciones
     except Exception as e:
         current_app.logger.error(f"Error al eliminar la partitura: {str(e)}")
@@ -318,9 +325,9 @@ def delete_digitalized_sheet(doc_id):
         firestore_db = current_app.config['firestore_db']
         doc_ref = firestore_db.collection('digitalized_sheets').document(doc_id)
         doc = doc_ref.get()
-        if doc.exists:
+        if doc.exists and doc.to_dict()['username'] == current_user.get_id():
             file_details = doc.to_dict()
-            file_path = file_details['path']
+            file_path = file_details['file_path']
 
             blob = current_app.config['firebase_storage'].blob(file_path)
             blob.delete()
@@ -335,7 +342,7 @@ def delete_digitalized_sheet(doc_id):
 
     return redirect(url_for('main.list_digitalized_sheets'))
 
-# Ruta para descargar partituras
+# Función para descargar partituras
 def download_sheets(bucket_name, file_name):
     # Nombre del archivo y su extensión
     filename_only = file_name.split('/')[-1]
@@ -378,59 +385,92 @@ def download_sheets(bucket_name, file_name):
         flash("Error al descargar el archivo.", 'error')
         return None
 
+# Ruta para descargar una partitura
+# Requiere haber iniciado sesión
+@main.route('/download_sheet/<doc_id>', methods=['GET'])
+@login_required
+def download_sheet(doc_id):
+    try:
+        firestore_db = current_app.config['firestore_db']
+        doc_ref = firestore_db.collection('digitalized_sheets').document(doc_id)
+        doc = doc_ref.get()
+        if doc.exists and doc.to_dict()['username'] == current_user.get_id():
+            file_details = doc.to_dict()
+            file_path = file_details['file_path']
+            blob = current_app.config['firebase_storage'].blob(file_path)
+            file_obj = io.BytesIO()
+            blob.download_to_file(file_obj)
+            file_obj.seek(0)
+            return send_file(
+                file_obj,
+                as_attachment=True,
+                download_name=file_path.split('/')[-1],
+                mimetype='application/octet-stream'
+            )
+        else:
+            flash('No se encontró la partitura especificada o no autorizado para descargar esta partitura.', 'error')
+            return redirect(url_for('main.list_digitalized_sheets'))
+    except Exception as e:
+        current_app.logger.error(f"Error al descargar la partitura: {str(e)}")
+        flash(f'Error al descargar la partitura: {str(e)}', 'error')
+
+    return redirect(url_for('main.list_digitalized_sheets'))
+
 # Ruta para digitalizar una partitura
 # Requiere haber iniciado sesión
 @main.route('/digitalize_and_view/<path:filename>', methods=['GET'])
 @login_required
 def digitalize_and_view(filename):
-    file_extension = filename.split('.')[-1]
-    current_app.logger.info(f"Fichero en digitalize_and_view: {filename}")
-    # Descarga el archivo desde Firebase Storage
-    input_file_path = download_sheets(current_app.config['FIREBASE_BUCKET_NAME'], filename)
+    print(f"Comenzando la digitalización de: {filename}")
+    original_extension = filename.split('.')[-1]
+    user_folder = f'partituras/user_{current_user.get_id()}/'
 
+    if original_extension in ['pdf', 'png', 'jpg', 'jpeg']:
+        file_type_folder = original_extension + '/'
+    else:
+        file_type_folder = 'others/'
+
+    full_blob_name = f"{user_folder}{file_type_folder}{filename}"
+    print(f"Ruta completa del archivo en el bucket: {full_blob_name}")
+
+    firestore_db = current_app.config['firestore_db']
+    sheet_ref = firestore_db.collection('sheet_music').where('file_path', '==', full_blob_name).get()
+    sheet_owned = any(s.to_dict()['username'] == current_user.get_id() for s in sheet_ref)
+
+    if not sheet_owned:
+        flash('No autorizado para digitalizar esta partitura.', 'error')
+        return redirect(url_for('main.list_sheet_music'))
+
+    input_file_path = download_sheets(current_app.config['FIREBASE_BUCKET_NAME'], filename)
     if input_file_path is None:
         flash('No se pudo descargar el archivo para la digitalización.', 'error')
         return redirect(url_for('main.list_sheet_music'))
 
-    if file_extension != 'mxl':
-        title = filename.rsplit('.', 1)[0]
-        sheet_music = SheetMusic(title=title, file_path=input_file_path)
-        # Digitaliza la partitura
-        output_file_path, output_dir = digitalize_sheets(input_file_path, sheet_music)
+    title = filename.rsplit('.', 1)[0]
+    sheet_music = SheetMusic(title=title, file_path=input_file_path)
+    output_file_path, output_dir = digitalize_sheets(input_file_path, sheet_music)
 
-        if output_file_path:
-            try:
-                user_folder = f'partituras/user_{current_user.get_id()}/mxl/'
-                mxl_filename = secure_filename(sheet_music.title + '.mxl')
-                full_path = f'{user_folder}{mxl_filename}'
-                blob = current_app.config['firebase_storage'].blob(full_path)
-                # Subida del archivo digitalizado a Firebase Storage
-                blob.upload_from_filename(output_file_path, content_type='application/vnd.recordare.musicxml+xml')
+    if output_file_path:
+        mxl_filename = secure_filename(sheet_music.title + '.mxl')
+        mxl_full_path = f'{user_folder}mxl/{mxl_filename}'
+        blob = current_app.config['firebase_storage'].blob(mxl_full_path)
+        blob.upload_from_filename(output_file_path, content_type='application/vnd.recordare.musicxml+xml')
 
-                # Registro de la información del archivo digitalizado en Firestore
-                firestore_db = current_app.config['firestore_db']
-                firestore_db.collection('digitalized_sheets').document(mxl_filename).set({
-                    'username': current_user.get_id(),
-                    'filename': mxl_filename,
-                    'path': full_path,
-                    'uploaded_at': firestore.SERVER_TIMESTAMP
-                })
+        firestore_db.collection('digitalized_sheets').document(mxl_filename).set({
+            'title': title,
+            'file_path': mxl_full_path,
+            'upload_date': datetime.now(),
+            'username': current_user.get_id()
+        })
 
-                clean_directory(output_dir)
-
-                flash('Partitura digitalizada correctamente.')
-                return redirect(url_for('main.list_digitalized_sheets'))
-            except Exception as e:
-                flash('Error al subir el archivo digitalizado.', 'error')
-                return redirect(url_for('main.list_sheet_music'))
-        else:
-            flash('No se pudo digitalizar la partitura.', 'error')
-            flash('Preprocesa la imagen antes de digitalizarla.')
-            return redirect(url_for('main.list_sheet_music'))
+        clean_directory(output_dir)
+        flash('Partitura digitalizada correctamente.')
+        return redirect(url_for('main.list_digitalized_sheets'))
     else:
-        return redirect(url_for('main.view_sheet', filename=filename))
+        flash('No se pudo digitalizar la partitura.', 'error')
+        return redirect(url_for('main.list_sheet_music'))
 
-# Borrado de todos los archivos y subdirectorios del directorio pasado por parametro
+# Borrado de todos los archivos del directorio pasado por parametro
 def clean_directory(directory_path):
     try:
         for file_name in os.listdir(directory_path):
@@ -450,29 +490,32 @@ def clean_directory(directory_path):
 @login_required
 def list_sheet_music():
     try:
-        user_folder = f'partituras/user_{current_user.get_id()}/'
-        bucket = current_app.config['firebase_storage']
-        
+        firestore_db = current_app.config['firestore_db']
+        user_id = current_user.get_id()
         sheet_music_files = []
 
-        blobs = bucket.list_blobs(prefix=user_folder)
-        for blob in blobs:
-            file_extension = blob.name.split('.')[-1]
-            if file_extension not in ['mxl']:
-                if allowed_file(blob.name):
-                    file_name = os.path.basename(blob.name)
-                    file_type_folder = file_extension if file_extension in ['pdf', 'jpg', 'png', 'jpeg'] else 'images'
-                    download_url = url_for('main.digitalize_and_view', filename=f"{file_type_folder}/{file_name}")
-                    
-                    firestore_db = current_app.config['firestore_db']
-                    doc_ref = firestore_db.collection('sheet_music').document(file_name)
-                    doc_id = doc_ref.id
+        print(f"Obteniendo partituras para el usuario {user_id}")
 
-                    sheet_music_files.append({'name': file_name, 'url': download_url, 'doc_id': doc_id})
-        
+        sheets = firestore_db.collection('sheet_music').where('username', '==', user_id).stream()
+
+        for sheet in sheets:
+            sheet_data = sheet.to_dict()
+            file_name = sheet_data['file_path'].split('/')[-1]
+            download_url = url_for('main.digitalize_and_view', filename=file_name)
+            doc_id = sheet.id
+            
+            sheet_music_files.append({
+                'name': file_name,
+                'url': download_url,
+                'doc_id': doc_id
+            })
+
+        print(f"Total de partituras listadas: {len(sheet_music_files)}")
+
     except Exception as e:
         current_app.logger.error(f"Error al listar las partituras: {str(e)}")
-        flash(f"Error al listar las partituras: {str(e)}")
+        flash(f"Error al listar las partituras: {str(e)}", 'error')
+        print(f"Error al listar las partituras: {e}")
 
     return render_template('list_sheet_music.html', sheet_music_files=sheet_music_files)
 
@@ -482,11 +525,20 @@ def list_sheet_music():
 @main.route('/view_sheet/<filename>', methods=['GET'])
 @login_required
 def view_sheet(filename):
+    # Obtiene información del usuario y la partitura
     user_folder = f'partituras/user_{current_user.get_id()}/mxl/'
-    bucket = current_app.config['firebase_storage']
     full_blob_name = f"{user_folder}{filename}"
-    
+    firestore_db = current_app.config['firestore_db']
+    sheet_ref = firestore_db.collection('digitalized_sheets').document(filename)
+    sheet_doc = sheet_ref.get()
+
+    # Verificación de la existencia de la partitura y si el usuario actual es el propietario
+    if not sheet_doc.exists or sheet_doc.to_dict()['username'] != current_user.get_id():
+        flash('No autorizado para ver esta partitura.', 'error')
+        return redirect(url_for('main.list_digitalized_sheets'))
+
     try:
+        # Verificación del estado de Firebase
         if not firebase_admin._apps:
             cred_dict = json.loads(base64.b64decode(current_app.config['FIREBASE_CREDENTIALS_JSON_BASE64']).decode('utf-8'))
             cred = credentials.Certificate(cred_dict)
@@ -498,9 +550,15 @@ def view_sheet(filename):
         bucket = storage_client.bucket(current_app.config['FIREBASE_BUCKET_NAME'])
         blob = bucket.blob(full_blob_name)
 
+        # Verificación la existencia del archivo
+        if not blob.exists():
+            current_app.logger.error(f"Archivo no encontrado: {full_blob_name}")
+            flash('El archivo solicitado no existe en el almacenamiento.', 'error')
+            return redirect(url_for('main.list_digitalized_sheets'))
+
         # Descarga del contenido del archivo como bytes
         mxl_bytes = blob.download_as_bytes()
-        
+
         # Archivo MXL como un archivo ZIP
         with zipfile.ZipFile(io.BytesIO(mxl_bytes)) as z:
             for file in z.namelist():
@@ -508,17 +566,21 @@ def view_sheet(filename):
                     with z.open(file) as xml_file:
                         xml_content = xml_file.read()
                         break
-        
-        xml_content_b64 = base64.b64encode(xml_content).decode('utf-8')
+            else:
+                # Si no se encuentra un archivo XML
+                flash('El archivo MXL no contiene un archivo XML válido.', 'error')
+                return redirect(url_for('main.list_digitalized_sheets'))
 
+        xml_content_b64 = base64.b64encode(xml_content).decode('utf-8')
         return render_template('view_sheet.html', mxl_content=xml_content_b64)
-    # Excepción de Firebase Storage si no se encuentra
-    except google.api_core.exceptions.NotFound:
-        flash('El archivo solicitado no existe.', 'error')
-        return redirect(url_for('main.list_sheet_music'))
+
+    except zipfile.BadZipFile:
+        flash('El archivo MXL no se puede abrir, puede estar corrupto.', 'error')
+        return redirect(url_for('main.list_digitalized_sheets'))
     except Exception as e:
-        flash('Error al descargar la partitura digitalizada.', 'error')
-        return redirect(url_for('main.list_sheet_music'))
+        current_app.logger.error(f"Error al descargar la partitura digitalizada: {str(e)}")
+        flash(f'Error al descargar la partitura digitalizada: {str(e)}', 'error')
+        return redirect(url_for('main.list_digitalized_sheets'))
 
 # Ruta para listar las partituras
 # Requiere haber iniciado sesión
@@ -528,25 +590,33 @@ def view_sheet(filename):
 def list_digitalized_sheets():
     try:
         firestore_db = current_app.config['firestore_db']
-        bucket = current_app.config['firebase_storage']
-        sheets = firestore_db.collection('digitalized_sheets').where('username', '==', current_user.get_id()).stream()
-
+        user_id = current_user.get_id()
         sheet_music_files = []
+
+        sheets = firestore_db.collection('digitalized_sheets').where('username', '==', user_id).stream()
+
         for sheet in sheets:
             sheet_data = sheet.to_dict()
-            full_blob_name = f"partituras/user_{current_user.get_id()}/mxl/{sheet_data['filename']}"
+            full_blob_name = f"partituras/user_{user_id}/mxl/{sheet_data['file_path'].split('/')[-1]}"
 
-            blob = bucket.blob(full_blob_name)
+            blob = current_app.config['firebase_storage'].blob(full_blob_name)
             if blob.exists():
-                doc_id = sheet.id
-                sheet_music_files.append({'name': sheet_data['filename'], 'url': url_for('main.view_sheet', filename=sheet_data['filename']), 'doc_id': doc_id})
+                download_url = url_for('main.view_sheet', filename=sheet_data['file_path'].split('/')[-1])
+                sheet_music_files.append({
+                    'name': sheet_data['file_path'].split('/')[-1],
+                    'url': download_url,
+                    'doc_id': sheet.id
+                })
             else:
-                firestore_db.collection('digitalized_sheets').document(sheet.id).delete()
+                current_app.logger.error(f"Archivo no encontrado en Firebase Storage: {full_blob_name}")
+                sheet.ref.delete()
+
+        return render_template('list_digitalized_sheets.html', sheet_music_files=sheet_music_files)
 
     except Exception as e:
-        flash(f"Error al listar las partituras digitalizadas: {str(e)}")
-
-    return render_template('list_digitalized_sheets.html', sheet_music_files=sheet_music_files)
+        current_app.logger.error(f"Error al listar las partituras digitalizadas: {str(e)}")
+        flash(f"Error al listar las partituras digitalizadas: {str(e)}", 'error')
+        return redirect(url_for('main.home'))
 
 # Función para preprocesar imágenes
 def preprocess_image(file_path, median_kernel_size, adaptive_threshold_block_size, adaptive_threshold_c, erosion_iterations, dilation_iterations):
@@ -579,41 +649,73 @@ def preprocess_image(file_path, median_kernel_size, adaptive_threshold_block_siz
     except Exception as e:
         raise e
 
+# Ruta para listar las partituras registradas
+# Requiere haber iniciado sesión
+# Obtiene los parámetros de preprocesamiento y preprocesa la imagen
 @main.route('/preprocess/<path:filename>', methods=['GET', 'POST'])
 @login_required
 def preprocess(filename):
+    user_folder = f'user_{current_user.get_id()}'
+    file_extension = filename.split('.')[-1]
+    full_blob_name = f'partituras/{user_folder}/{file_extension}/{filename}'
+    
+    firestore_db = current_app.config['firestore_db']
+    sheet_ref = firestore_db.collection('sheet_music').where('file_path', '==', full_blob_name).where('username', '==', current_user.get_id()).stream()
+    
+    if not any(sheet_ref):
+        flash('No autorizado para procesar esta partitura.', 'error')
+        return redirect(url_for('main.list_sheet_music'))
+
     if request.method == 'POST':
         try:
-            # Obtención de los parámetros de preprocesamiento
-            median_kernel_size = request.form.get('median_kernel_size', 5, type=int)
-            adaptive_threshold_block_size = request.form.get('adaptive_threshold_block_size', 11, type=int)
-            adaptive_threshold_c = request.form.get('adaptive_threshold_c', 2, type=int)
-            erosion_iterations = request.form.get('d_iterations', 1, type=int)
-            dilation_iterations = request.form.get('e_iterations', 1, type=int)
+            # Validaciones y obtención de los parámetros
+            median_kernel_size = int(request.form.get('median_kernel_size', 5))
+            if median_kernel_size > 15:
+                flash('El tamaño máximo permitido para el Kernel Mediano es 15.', 'error')
+                return redirect(url_for('main.preprocess', filename=filename))
+
+            adaptive_threshold_block_size = int(request.form.get('adaptive_threshold_block_size', 11))
+            if adaptive_threshold_block_size > 31:
+                flash('El tamaño máximo permitido para el Bloque de Umbral Adaptativo es 31.', 'error')
+                return redirect(url_for('main.preprocess', filename=filename))
+
+            adaptive_threshold_c = int(request.form.get('adaptive_threshold_c', 2))
+            if adaptive_threshold_c < 0 or adaptive_threshold_c > 10:
+                flash('El valor para C debe estar entre 0 y 10.', 'error')
+                return redirect(url_for('main.preprocess', filename=filename))
+
+            erosion_iterations = int(request.form.get('e_iterations', 1))
+            if erosion_iterations > 5:
+                flash('El número máximo de iteraciones de erosión es 5.', 'error')
+                return redirect(url_for('main.preprocess', filename=filename))
+
+            dilation_iterations = int(request.form.get('d_iterations', 1))
+            if dilation_iterations > 5:
+                flash('El número máximo de iteraciones de dilatación es 5.', 'error')
+                return redirect(url_for('main.preprocess', filename=filename))
 
             # Descarga del archivo de Firebase Storage
             input_file_path = download_sheets(current_app.config['FIREBASE_BUCKET_NAME'], filename)
             if input_file_path is None:
                 flash('No se pudo descargar el archivo para el preprocesamiento.', 'error')
-                current_app.logger.error("Archivo no encontrado en Firebase.")
                 return redirect(url_for('main.list_sheet_music'))
 
-            # Preprocesa la imagen
+            # Procesamiento de la imagen
             processed_file_path = preprocess_image(input_file_path, median_kernel_size, adaptive_threshold_block_size, adaptive_threshold_c, erosion_iterations, dilation_iterations)
-            
-            # Descarga del archivo
-            return send_file(processed_file_path, as_attachment=True)
-        except FileNotFoundError as e:
-            flash('Error al cargar la imagen para el preprocesamiento.', 'error')
-            current_app.logger.error(f'FileNotFoundError: {e}')
-            return redirect(url_for('main.list_sheet_music'))
+            if processed_file_path:
+                # Descarga del archivo
+                return send_file(processed_file_path, as_attachment=True)
+            else:
+                flash('No se pudo procesar la imagen.', 'error')
+                return redirect(url_for('main.list_sheet_music'))
+                
         except Exception as e:
-            flash('Error al procesar la imagen.', 'error')
-            current_app.logger.error(f'Exception: {e}')
-            return redirect(url_for('main.list_sheet_music'))
+            flash(f'Error al procesar la imagen: {e}', 'error')
+            return redirect(url_for('main.preprocess', filename=filename))
+
+    # Carga inicial de la página de formulario o manejo de otros métodos GET
     else:
         return render_template('preprocess_form_page.html', filename=filename)
-
 
 def configure_routes(app):
     app.register_blueprint(main)

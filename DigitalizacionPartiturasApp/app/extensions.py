@@ -18,17 +18,17 @@ def load_credentials(info):
 
 # Función para inicializar Firebase
 def init_firebase(app):
-    # Obtención de la credenciales de Firebase codificadas
-    firebase_credentials_base64 = os.environ.get('FIREBASE_CREDENTIALS_JSON_BASE64', 'Variable no configurada')
-
     try:
-        # Intento de obtener la app de Firebase
+        # Intento de obtener la app de Firebase si ya está inicializada
         firebase_admin.get_app()
     except ValueError:
+        # Si Firebase no está inicializado, procedemos con la inicialización
+        firebase_credentials_base64 = os.environ.get('FIREBASE_CREDENTIALS_JSON_BASE64', None)
         if not firebase_credentials_base64:
-            raise ValueError("FIREBASE_CREDENTIALS_JSON_BASE64 no está configurado.")
-        # Inicialización de Firebase con las credenciales
-        cred_dict = json.loads(base64.b64decode(firebase_credentials_base64))
+            raise ValueError("La variable de entorno FIREBASE_CREDENTIALS_JSON_BASE64 no está configurada.")
+        
+        # Decodificación de las credenciales y creación del objeto de credenciales
+        cred_dict = json.loads(base64.b64decode(firebase_credentials_base64).decode('utf-8'))
         cred = credentials.Certificate(cred_dict)
         firebase_admin.initialize_app(cred, {
             'storageBucket': f"{cred_dict['project_id']}.appspot.com"
@@ -36,6 +36,4 @@ def init_firebase(app):
 
     # Configuración del cliente de Firestore
     app.config['firestore_db'] = firestore.client()
-    
-    # Configuración del bucket de Firebase Storage
-    app.config['firebase_storage'] = storage.bucket()
+    app.config['firebase_storage'] = storage.bucket(app.config['FIREBASE_BUCKET_NAME'])

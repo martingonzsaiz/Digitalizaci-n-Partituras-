@@ -15,9 +15,21 @@
             align-items: center;
         }
 
+        .alert-container {
+            position: absolute;
+            top: 10%;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            z-index: 1050;
+        }
+
         .alert-custom {
             background-color: #ffcc00;
             color: black;
+            width: 30%;
+            text-align: center;
+            border-radius: 5px;
         }
 
         .centered-form {
@@ -34,6 +46,7 @@
             background-color: #d3ca9b;
             padding: 20px;
             border-radius: 8px;
+            text-align: left;
         }
 
         .btn:hover, .btn:focus {
@@ -43,11 +56,13 @@
 
         h1 {
             color: #3e3200;
-            margin-bottom: 10px;
+            margin-bottom: 20px;
+            text-align: center;
         }
 
         .form-label {
             color: #59452a;
+            text-align: left;
         }
 
         .form-control {
@@ -62,41 +77,57 @@
             color: #3e3200;
             display: block;
             width: 100%;
-            text-align: center;
+        }
+
+        .center-link {
+            display: flex;
+            justify-content: center;
+            width: 100%;
         }
 
         .link-registrar, .link-registrar:hover, .link-registrar:focus, .link-registrar:active {
             color: #3e3200;
             text-decoration: none;
-            display: block;
-            margin-top: 20px;
             font-size: 18px;
+            margin-top: 15px;
         }
 
         .link-registrar:hover {
             text-decoration: underline;
-            color: #3e3200;
         }
 
+        .link-cerrar {
+            color: #d3ca9b;
+            font-size: 18px;
+            margin-top: 10px;
+            text-decoration: none;
+            display: block;
+        }
+        
+        .link-cerrar:hover, .link-cerrar:focus, .link-cerrar:active {
+            color: #d3ca9b;
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
+    <div class="alert-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-custom alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+    </div>
+
     <div class="centered-form">
-        <div class="container">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="alert alert-custom alert-dismissible fade show" role="alert">
-                            {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
-        </div>
-        <div class="form-container mx-auto">
+        <div class="form-container">
             <h1>Inicio de sesión</h1>
-            <form action="/login" method="post" class="p-4" style="background-color: transparent;">
+            <form action="/login" method="post">
                 <div class="mb-3">
                     <label for="username" class="form-label">Usuario</label>
                     <input type="text" class="form-control" id="username" name="username" required>
@@ -105,14 +136,13 @@
                     <label for="password" class="form-label">Contraseña</label>
                     <input type="password" class="form-control" id="password" name="password" required>
                 </div>
-                <div style="text-align: center;">
-                    <button type="submit" class="btn btn-primary">Iniciar Sesión</button>
-                </div>
-                <div class="mt-3 text-center">
+                <button type="submit" class="btn btn-primary">Iniciar Sesión</button>
+                <div class="center-link">
                     <a href="/register" class="link-registrar">Registrar</a>
                 </div>
             </form>
         </div>
+        <a href="/" class="link-cerrar">Volver a Inicio</a>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

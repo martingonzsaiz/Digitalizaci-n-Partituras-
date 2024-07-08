@@ -79,6 +79,12 @@
             text-decoration: underline;
             color: #d3ca9b;
         }
+
+        .button-group {
+            display: flex;
+            align-items: center;
+        }
+
     </style>
 </head>
 <body>
@@ -101,12 +107,16 @@
             {% for sheet in sheet_music_files %}
                 <li class="list-group-item">
                     <a href="{{ sheet.url }}">{{ sheet.name }}</a>
-                    <form action="{{ url_for('main.delete_digitalized_sheet', doc_id=sheet.doc_id) }}" method="POST" style="display: inline;">
-                        <button type="submit" class="btn btn-danger" onclick="return confirm('¿Estás seguro de querer eliminar esta partitura digitalizada?');">Eliminar</button>
-                    </form>
+                    <div class="button-group">
+                        <button type="button" onclick="location.href='{{ url_for('main.download_sheet', doc_id=sheet.doc_id) }}'" class="btn btn-success">Descargar</button>
+                        <form action="{{ url_for('main.delete_digitalized_sheet', doc_id=sheet.doc_id) }}" method="POST" style="display: inline;">
+                            <button type="submit" class="btn btn-danger" onclick="return confirm('¿Estás seguro de querer eliminar esta partitura digitalizada?');">Eliminar</button>
+                        </form>
+                    </div>
                 </li>
             {% endfor %}
         </ul>
+                
         <a href="{{ url_for('main.menu') }}" class="link-menu">Volver al Menú</a>
     </div>
 

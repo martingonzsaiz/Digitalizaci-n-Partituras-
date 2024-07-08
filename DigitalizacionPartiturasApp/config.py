@@ -16,7 +16,7 @@ class Config:
     PERMANENT_SESSION_LIFETIME = timedelta(days=1)
     
     # Credenciales de Firebase codificadas en base64
-    FIREBASE_CREDENTIALS_JSON_BASE64 = os.environ.get('FIREBASE_CREDENTIALS_JSON_BASE64', '')
+    FIREBASE_CREDENTIALS_JSON_BASE64 = os.environ.get('FIREBASE_CREDENTIALS_JSON_BASE64')
     
     # Bucket de Firebase
     FIREBASE_BUCKET_NAME = os.environ.get('FIREBASE_BUCKET_NAME', 'sheet-transcribe.appspot.com')

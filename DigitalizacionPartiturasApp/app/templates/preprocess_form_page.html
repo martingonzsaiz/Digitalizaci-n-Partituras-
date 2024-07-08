@@ -98,19 +98,23 @@
         <form action="{{ url_for('main.preprocess', filename=filename) }}" method="post">
             <div class="mb-3">
                 <label for="median_kernel_size" class="form-label">Tamaño del Kernel Mediano:</label>
-                <input type="number" id="median_kernel_size" name="median_kernel_size" value="5" min="1" step="2" class="form-control" required>
+                <input type="number" id="median_kernel_size" name="median_kernel_size" value="5" min="1" max="15" step="2" class="form-control" required>
             </div>
             <div class="mb-3">
+                <label for="adaptive_threshold_c" class="form-label">Constante C para Umbral Adaptativo:</label>
+                <input type="number" id="adaptive_threshold_c" name="adaptive_threshold_c" value="2" min="0" max="10" class="form-control" required>
+            </div>            
+            <div class="mb-3">
                 <label for="adaptive_threshold_block_size" class="form-label">Tamaño del Bloque para Umbral Adaptativo:</label>
-                <input type="number" id="adaptive_threshold_block_size" name="adaptive_threshold_block_size" value="11" min="3" step="2" class="form-control" required>
+                <input type="number" id="adaptive_threshold_block_size" name="adaptive_threshold_block_size" value="11" min="3" max="31" step="2" class="form-control" required>
             </div>
             <div class="mb-3">
                 <label for="erosion_iterations" class="form-label">Iteraciones de Erosión:</label>
-                <input type="number" id="e_iterations" name="e_iterations" value="1" min="0" class="form-control" required>
+                <input type="number" id="e_iterations" name="e_iterations" value="1" min="0" max="5" class="form-control" required>
             </div>
             <div class="mb-3">
                 <label for="dilation_iterations" class="form-label">Iteraciones de Dilatación:</label>
-                <input type="number" id="d_iterations" name="d_iterations" value="1" min="0" class="form-control" required>
+                <input type="number" id="d_iterations" name="d_iterations" value="1" min="0" max="5" class="form-control" required>
             </div>
             <div class="d-flex">
                 <button type="submit" class="btn btn-custom">Preprocesar</button>
