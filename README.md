@@ -24,10 +24,7 @@ Para probar la aplicación de manera rápida es posible usar la imagen Docker su
 1. Primero es necesario descargar la imagen:
 docker pull martingonzsaiz/melodymatrix:latest
 2. Luego es necesario configurar las variables de entorno. Se puede ejecutar la imagen pasando las credenciales como parametros del comando.
-docker run -p 5000:5000 \
--e FIREBASE_CREDENTIALS_JSON_BASE64=<credencial_firebase_codificada> \
--e FIREBASE_BUCKET_NAME=<nombre_bucket> \
-martingonzsaiz/melodymatrix:latest
+docker run -p 5000:5000 -e PORT=5000 -e FIREBASE_CREDENTIALS_JSON_BASE64=<credencial_firebase_codificada> -e FIREBASE_BUCKET_NAME=<nombre_bucket> martingonzsaiz/melodymatrix:latest
 3. Finalmente se podría iniciar el contenedor.
 http://localhost:5000 
 
