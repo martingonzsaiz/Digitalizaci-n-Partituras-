@@ -35,7 +35,7 @@ http://localhost:5000
 En primer lugar, sería necesario clonar el repositorio. Para ello hay que realizar el comando siguiente en la terminal CMD o en el PowerShell:
 git clone https://github.com/martingonzsaiz/Digitalizacion-Partituras.git
 Luego sería necesario moverse al directorio en cuestión para seguir con las siguientes instrucciones.
-cd Digitalizacion-Partituras
+cd Digitalizacion-Partituras seguido de cd DigitalizaciónPartiturasApp
 
 Después se creó un entorno virtual en el que se trabajó y se llevó el desarrollo. La creación del entorno virtual se alcanza con los siguientes comandos:
 python -m venv entorno_partituras 
